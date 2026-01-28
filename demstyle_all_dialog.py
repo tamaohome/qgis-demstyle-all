@@ -23,11 +23,16 @@
  ***************************************************************************/
 """
 
+from __future__ import annotations
+
 import os
 from typing import override
 
-from qgis.core import QgsPointXY, QgsRaster
-from qgis.utils import iface
+from qgis.PyQt.QtCore import Qt
+from qgis.core import QgsPointXY
+from qgis.core import QgsRaster
+from qgis.gui import QgsMapTool
+from qgis.gui import QgsMapToolEmitPoint
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
 
@@ -40,15 +45,11 @@ FORM_CLASS, _ = uic.loadUiType(
 
 
 class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
-    def __init__(self, parent=None):
+    def __init__(self, iface):
         """Constructor."""
-        super(DEMStyleAllDialog, self).__init__(parent)
+        super(DEMStyleAllDialog, self).__init__(parent=None)
+        self.iface = iface
         self.settings = DialogSettings()
-        # Set up the user interface from Designer through FORM_CLASS.
-        # After self.setupUi() you can access any designer object by doing
-        # self.<objectname>, and you can use autoconnect slots - see
-        # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
-        # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
 
         self.settings.restore_dialog_state(self)  # ダイアログ設定を復元
@@ -59,28 +60,32 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
     def on_set_height_clicked(self):
         """地図キャンバスのクリック座標で標高値を取得しSpinBox等に反映"""
 
-        from qgis.gui import QgsMapToolEmitPoint
-
         # QtWidgets.QMessageBox.information(
         #     self, "地図クリック", "標高を取得したい地点を地図上でクリックしてください。"
         # )
-        self._canvas = iface.mapCanvas()
+        self._canvas = self.iface.mapCanvas()
         self._prev_maptool = self._canvas.mapTool()
         self._point_tool = QgsMapToolEmitPoint(self._canvas)
         self._point_tool.canvasClicked.connect(self._on_canvas_clicked)
         self._canvas.setMapTool(self._point_tool)
 
     def _on_canvas_clicked(self, point, button):
+        if button != Qt.LeftButton:
+            return
+
         # 標高取得後にダイアログを最前面に表示
         self.raise_()
         self.activateWindow()
-        layer = iface.activeLayer()
+
+        layer = self.iface.activeLayer()
+
         # モード解除
         self._canvas.setMapTool(self._prev_maptool)
         self._point_tool.canvasClicked.disconnect(self._on_canvas_clicked)
         del self._point_tool
         del self._prev_maptool
         del self._canvas
+
         if layer is None:
             QtWidgets.QMessageBox.warning(
                 self, "レイヤ未選択", "QGISのレイヤツリーでレイヤを選択してください。"
@@ -106,3 +111,35 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         """ウィンドウを閉じる前に設定を保存"""
         self.settings.save_dialog_state(self)
         event.accept()
+
+
+class PointAndElevationTool(QgsMapTool):
+    """標高取得用MapTool"""
+
+    def __init__(self, canvas, iface):
+        super().__init__(canvas)
+        self.canvas = canvas
+        self.iface = iface
+
+    def canvasPressEvent(self, e):
+        # クリックされた座標を取得（画面座標から地図座標へ変換）
+        point = self.toMapCoordinates(e.pos())
+
+        # イベントをここで終了させ、QGISデフォルト挙動を上書き
+        e.accept()
+
+        # 標高（ラスタ値）取得処理の呼び出し
+        self.get_elevation(point)
+
+    def get_elevation(self, point):
+        layer = self.iface.activeLayer()
+        if not layer or layer.type() != layer.RasterLayer:
+            return
+
+        # 第1バンドの値を取得
+        res = layer.dataProvider().identify(point, QgsRaster.IdentifyFormatValue)
+        if res.isValid():
+            val = res.results().get(1)  # バンド1の値
+            self.iface.messageBar().pushMessage(
+                "情報", f"座標: {point.x():.3f}, {point.y():.3f} / 標高: {val}", level=0
+            )
