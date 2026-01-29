@@ -184,6 +184,8 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
             actual_value = DATA_RANGE_VALUES[index]
             # LineEditに文字列として反映
             self.dataRangeLineEdit.setText(str(actual_value))
+            # 最小値／最大値を更新
+            self.on_mid_elevation_changed()
         except IndexError:
             pass
 
