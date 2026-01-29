@@ -88,7 +88,7 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
     def get_current_data_range(self):
         """現在のデータレンジを取得する"""
         index = self.dataRangeSlider.value()
-        return self.data_values[index]
+        return DATA_RANGE_VALUES[index]
 
     def start_capture_mode(self):
         """地図キャンバス上の標高をマウスクリックで取得するモード"""
@@ -127,10 +127,16 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
             QtWidgets.QMessageBox.warning(self, "エラー", message)
             return
 
-        rounded_elevation = int(round(elevation / 5) * 5)  # 標高地の値を丸め
+        # 最小、中心、最大の標高を算出
+        data_range = self.get_current_data_range()
+        mid_elevation = int(round(elevation / 5) * 5)  # 標高地の値を丸め
+        min_elevation = mid_elevation - data_range
+        max_elevation = mid_elevation + data_range
 
         # スピンボックスに値をセット
-        self.midElevationSpinBox.setValue(rounded_elevation)
+        self.minElevationSpinBox.setValue(min_elevation)
+        self.midElevationSpinBox.setValue(mid_elevation)
+        self.maxElevationSpinBox.setValue(max_elevation)
 
     @override
     def closeEvent(self, event):
