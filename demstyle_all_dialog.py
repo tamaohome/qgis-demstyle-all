@@ -84,18 +84,16 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         """OKボタン押下時の処理"""
         layers = self.get_target_layers()
 
-        # debug: 1枚目の標高設定レイヤのみ対象とする
-        layer = layers[0]
+        for layer in layers:
+            base_dir = Path(layer.dataProvider().dataSourceUri()).parent
 
-        base_dir = Path(layer.dataProvider().dataSourceUri()).parent
+            # スタイルファイル (*.qml) を生成
+            qml_filepath = create_style_qml(base_dir, self.min_elevation, self.max_elevation)
 
-        # スタイルファイル (*.qml) を生成
-        qml_filepath = create_style_qml(base_dir, self.min_elevation, self.max_elevation)
-
-        # スタイルファイル (*.qml) をレイヤに適用
-        layer.loadNamedStyle(str(qml_filepath))
-        self.iface.layerTreeView().refreshLayerSymbology(layer.id())
-        self.iface.mapCanvas().refreshAllLayers()
+            # スタイルファイル (*.qml) をレイヤに適用
+            layer.loadNamedStyle(str(qml_filepath))
+            self.iface.layerTreeView().refreshLayerSymbology(layer.id())
+            self.iface.mapCanvas().refreshAllLayers()
 
         # メッセージバーに表示
         self.iface.messageBar().pushMessage("info", "DEMスタイルの設定が完了しました", Qgis.Info, duration=3)
