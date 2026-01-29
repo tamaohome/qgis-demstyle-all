@@ -29,14 +29,14 @@ import os
 from typing import override
 
 from qgis.PyQt.QtCore import Qt
-from qgis.core import QgsPointXY
 from qgis.core import QgsRaster
 from qgis.core import QgsMapLayerType
 from qgis.core import QgsRasterLayer
-from qgis.gui import QgsMapTool
+from qgis.core import QgsProject
 from qgis.gui import QgsMapToolEmitPoint
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
+from qgis.PyQt.QtWidgets import QListWidgetItem
 
 from .settings import DialogSettings
 
@@ -63,6 +63,8 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.dataRangeSlider.setValue(2)
         self.dataRangeLineEdit.setText(str(DATA_RANGE_VALUES[2]))
 
+        self.refresh_layer_list()  # レイヤ一覧を更新
+
         self.settings.restore_dialog_state(self)  # ダイアログ設定を復元
 
         # シグナル接続
@@ -75,7 +77,22 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         if ok_button:
             ok_button.setFocus()
 
-    def handle_slider_change(self, index):
+    def refresh_layer_list(self) -> None:
+        """レイヤ一覧を更新する"""
+        self.layerListWidget.clear()  # リストを初期化
+        layers = QgsProject.instance().mapLayers().values()  # 全レイヤを取得
+        search_string = self.get_current_search_string()  # 検索文字列を取得
+
+        for layer in layers:
+            # 検索文字列に該当しないレイヤはスキップ
+            if search_string not in layer.name():
+                continue
+
+            item = QListWidgetItem(layer.name())  # 表示用のアイテムを作成
+            item.setData(Qt.UserRole, layer.id())  # 内部処理用にレイヤIDを保持
+            self.layerListWidget.addItem(item)  # リストに追加
+
+    def handle_slider_change(self, index) -> None:
         """スライダーの値（インデックス）変更時の処理"""
         try:
             # リストから実数値を取得
@@ -85,16 +102,20 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         except IndexError:
             pass
 
-    def get_current_data_range(self):
+    def get_current_data_range(self) -> int:
         """現在のデータレンジを取得する"""
         index = self.dataRangeSlider.value()
         return DATA_RANGE_VALUES[index]
 
-    def start_capture_mode(self):
+    def get_current_search_string(self) -> str:
+        """現在の検索文字列を取得する"""
+        return self.searchStringLineEdit.text()
+
+    def start_capture_mode(self) -> None:
         """地図キャンバス上の標高をマウスクリックで取得するモード"""
         self.canvas.setMapTool(self.map_tool)
 
-    def handle_get_elevation(self, point, button):
+    def handle_get_elevation(self, point, button) -> None:
         """標高を取得後の処理"""
         self.canvas.unsetMapTool(self.map_tool)  # ツールを解除
 
