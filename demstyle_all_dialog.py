@@ -29,6 +29,7 @@ import os
 from typing import override
 
 from qgis.PyQt.QtCore import Qt
+from qgis.core import QgsPointXY
 from qgis.core import QgsRaster
 from qgis.core import QgsMapLayerType
 from qgis.core import QgsRasterLayer
@@ -63,7 +64,7 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.dataRangeSlider.setValue(2)
         self.dataRangeLineEdit.setText(str(DATA_RANGE_VALUES[2]))
 
-        self.refresh_layer_list()  # レイヤ一覧を更新
+        self.refresh_target_layer_list()  # レイヤ一覧を更新
 
         self.settings.restore_dialog_state(self)  # ダイアログ設定を復元
 
@@ -77,8 +78,8 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         if ok_button:
             ok_button.setFocus()
 
-    def refresh_layer_list(self) -> None:
-        """レイヤ一覧を更新する"""
+    def refresh_target_layer_list(self) -> None:
+        """標高設定対象のレイヤ一覧を更新する"""
         self.layerListWidget.clear()  # リストを初期化
         layers = QgsProject.instance().mapLayers().values()  # 全レイヤを取得
         search_string = self.get_current_search_string()  # 検索文字列を取得
@@ -88,9 +89,24 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
             if search_string not in layer.name():
                 continue
 
+            # ラスタレイヤではないレイヤはスキップ
+            if layer.type() != QgsMapLayerType.RasterLayer:
+                continue
+
             item = QListWidgetItem(layer.name())  # 表示用のアイテムを作成
             item.setData(Qt.UserRole, layer.id())  # 内部処理用にレイヤIDを保持
             self.layerListWidget.addItem(item)  # リストに追加
+
+    def get_target_layers(self) -> list[QgsRasterLayer]:
+        """標高設定対象のレイヤ配列を取得する"""
+        layers = []
+        for i in range(self.layerListWidget.count()):
+            item = self.layerListWidget.item(i)
+            layer_id = item.data(Qt.UserRole)
+            layer = QgsProject.instance().mapLayer(layer_id)
+            if layer is not None:
+                layers.append(layer)
+        return layers
 
     def handle_slider_change(self, index) -> None:
         """スライダーの値（インデックス）変更時の処理"""
@@ -123,25 +139,8 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.raise_()
         self.activateWindow()
 
-        # アクティブな地物レイヤを取得
-        try:
-            layer = get_active_raster_layer(self.iface)
-        except Exception:
-            message = "地物レイヤを選択してください"
-            self.iface.messageBar().pushMessage("エラー", message, level=1)
-            return
-
-        # クリック地点の標高値を取得
-        res = layer.dataProvider().identify(point, QgsRaster.IdentifyFormatValue)
-
-        if not res.isValid():
-            message = "標高値の取得に失敗しました (0)"
-            QtWidgets.QMessageBox.warning(self, "エラー", message)
-            return
-
-        # 結果は辞書形式 {バンド番号: 値} で返される (通常、DEMは第1バンド)
-        results = res.results()
-        elevation = results.get(1)  # バンド1の値を取得
+        # 全ターゲットレイヤから標高を取得
+        elevation = self.get_elevation_from_target_layers(point)
 
         if elevation is None:
             message = "標高値の取得に失敗しました (1)"
@@ -165,10 +164,27 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.settings.save_dialog_state(self)
         event.accept()
 
+    def get_elevation_from_target_layers(self, point: QgsPointXY) -> float | None:
+        """全てのターゲットレイヤから標高を取得する"""
+        # ターゲットレイヤ配列を取得
+        layers = self.get_target_layers()
 
-def get_active_raster_layer(iface) -> QgsRasterLayer:
-    """選択中の地物レイヤを取得"""
-    layer = iface.activeLayer()  # 選択中のレイヤを取得
-    assert layer is not None
-    assert layer.type() == QgsMapLayerType.RasterLayer
-    return layer
+        for layer in layers:
+            # クリック地点の標高値を取得
+            res = layer.dataProvider().identify(point, QgsRaster.IdentifyFormatValue)
+
+            if not res.isValid():
+                continue
+                # message = "標高値の取得に失敗しました (0)"
+                # QtWidgets.QMessageBox.warning(self, "エラー", message)
+                # return
+
+            # 結果は辞書形式 {バンド番号: 値} で返される (通常、DEMは第1バンド)
+            results = res.results()
+            elevation = results.get(1)  # バンド1の値を取得
+
+            if elevation is not None:
+                return elevation
+
+        # 標高値の取得に失敗した場合 None を返す
+        return
