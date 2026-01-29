@@ -47,7 +47,7 @@ from .create_style_qml import create_style_qml
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "demstyle_all_dialog_base.ui"))
 
-DATA_RANGE_VALUES = [5, 10, 20, 50, 100, 200]
+DATA_RANGE_VALUES = [10, 20, 50, 100, 200, 500]
 
 
 class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
