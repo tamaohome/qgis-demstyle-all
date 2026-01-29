@@ -59,6 +59,10 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.canvas = self.iface.mapCanvas()
         self.map_tool = QgsMapToolEmitPoint(self.canvas)
 
+        # 初回起動時のデータレンジ値設定
+        self.dataRangeSlider.setValue(2)
+        self.dataRangeLineEdit.setText(str(DATA_RANGE_VALUES[2]))
+
         self.settings.restore_dialog_state(self)  # ダイアログ設定を復元
 
         # シグナル接続
