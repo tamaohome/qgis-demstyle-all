@@ -31,6 +31,8 @@ from typing import override
 from qgis.PyQt.QtCore import Qt
 from qgis.core import QgsPointXY
 from qgis.core import QgsRaster
+from qgis.core import QgsMapLayerType
+from qgis.core import QgsRasterLayer
 from qgis.gui import QgsMapTool
 from qgis.gui import QgsMapToolEmitPoint
 from qgis.PyQt import uic
@@ -43,6 +45,8 @@ FORM_CLASS, _ = uic.loadUiType(
     os.path.join(os.path.dirname(__file__), "demstyle_all_dialog_base.ui")
 )
 
+DATA_RANGE_VALUES = [5, 10, 20, 50, 100, 200]
+
 
 class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
     def __init__(self, iface):
@@ -52,59 +56,77 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.settings = DialogSettings()
         self.setupUi(self)
 
+        self.canvas = self.iface.mapCanvas()
+        self.map_tool = QgsMapToolEmitPoint(self.canvas)
+
         self.settings.restore_dialog_state(self)  # ダイアログ設定を復元
 
-        # setHeightButtonクリック時の処理を接続
-        self.setHeightButton.clicked.connect(self.on_set_height_clicked)
+        # シグナル接続
+        self.dataRangeSlider.valueChanged.connect(self.handle_slider_change)
+        self.setElevationButton.clicked.connect(self.start_capture_mode)
+        self.map_tool.canvasClicked.connect(self.handle_get_elevation)
 
-    def on_set_height_clicked(self):
-        """地図キャンバスのクリック座標で標高値を取得しSpinBox等に反映"""
+        # ダイアログ表示時にOKボタンへフォーカスを設定
+        ok_button = self.dialogButtonBox.button(QtWidgets.QDialogButtonBox.Ok)
+        if ok_button:
+            ok_button.setFocus()
 
-        # QtWidgets.QMessageBox.information(
-        #     self, "地図クリック", "標高を取得したい地点を地図上でクリックしてください。"
-        # )
-        self._canvas = self.iface.mapCanvas()
-        self._prev_maptool = self._canvas.mapTool()
-        self._point_tool = QgsMapToolEmitPoint(self._canvas)
-        self._point_tool.canvasClicked.connect(self._on_canvas_clicked)
-        self._canvas.setMapTool(self._point_tool)
+    def handle_slider_change(self, index):
+        """スライダーの値（インデックス）変更時の処理"""
+        try:
+            # リストから実数値を取得
+            actual_value = DATA_RANGE_VALUES[index]
+            # LineEditに文字列として反映
+            self.dataRangeLineEdit.setText(str(actual_value))
+        except IndexError:
+            pass
 
-    def _on_canvas_clicked(self, point, button):
-        if button != Qt.LeftButton:
-            return
+    def get_current_data_range(self):
+        """現在のデータレンジを取得する"""
+        index = self.dataRangeSlider.value()
+        return self.data_values[index]
+
+    def start_capture_mode(self):
+        """地図キャンバス上の標高をマウスクリックで取得するモード"""
+        self.canvas.setMapTool(self.map_tool)
+
+    def handle_get_elevation(self, point, button):
+        """標高を取得後の処理"""
+        self.canvas.unsetMapTool(self.map_tool)  # ツールを解除
 
         # 標高取得後にダイアログを最前面に表示
         self.raise_()
         self.activateWindow()
 
-        layer = self.iface.activeLayer()
-
-        # モード解除
-        self._canvas.setMapTool(self._prev_maptool)
-        self._point_tool.canvasClicked.disconnect(self._on_canvas_clicked)
-        del self._point_tool
-        del self._prev_maptool
-        del self._canvas
-
-        if layer is None:
-            QtWidgets.QMessageBox.warning(
-                self, "レイヤ未選択", "QGISのレイヤツリーでレイヤを選択してください。"
-            )
+        # アクティブな地物レイヤを取得
+        try:
+            layer = get_active_raster_layer(self.iface)
+        except Exception:
+            message = "地物レイヤを選択してください"
+            self.iface.messageBar().pushMessage("エラー", message, level=1)
             return
 
-        if hasattr(layer, "dataProvider") and hasattr(layer, "extent"):
-            provider = layer.dataProvider()
-            ident = provider.identify(point, QgsRaster.IdentifyFormatValue)
-            if ident.isValid():
-                results = ident.results()
-                if results:
-                    value = list(results.values())[0]
-                    self.midHeightSpinBox.setValue(int(value))
-                    return
+        # クリック地点の標高値を取得
+        res = layer.dataProvider().identify(point, QgsRaster.IdentifyFormatValue)
 
-        QtWidgets.QMessageBox.warning(
-            self, "標高取得失敗", "標高値の取得に失敗しました。"
-        )
+        if not res.isValid():
+            message = "標高値の取得に失敗しました (0)"
+            QtWidgets.QMessageBox.warning(self, "エラー", message)
+            return
+
+        # 結果は辞書形式 {バンド番号: 値} で返される (通常、DEMは第1バンド)
+        results = res.results()
+        elevation = results.get(1)  # バンド1の値を取得
+
+        if elevation is None:
+            message = "標高値の取得に失敗しました (1)"
+            QtWidgets.QMessageBox.warning(self, "エラー", message)
+            return
+
+        rounded_elevation = int(round(elevation / 5) * 5)  # 標高地の値を丸め
+
+        # スピンボックスに値をセット
+        self.midElevationSpinBox.setValue(rounded_elevation)
 
     @override
     def closeEvent(self, event):
@@ -113,33 +135,9 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         event.accept()
 
 
-class PointAndElevationTool(QgsMapTool):
-    """標高取得用MapTool"""
-
-    def __init__(self, canvas, iface):
-        super().__init__(canvas)
-        self.canvas = canvas
-        self.iface = iface
-
-    def canvasPressEvent(self, e):
-        # クリックされた座標を取得（画面座標から地図座標へ変換）
-        point = self.toMapCoordinates(e.pos())
-
-        # イベントをここで終了させ、QGISデフォルト挙動を上書き
-        e.accept()
-
-        # 標高（ラスタ値）取得処理の呼び出し
-        self.get_elevation(point)
-
-    def get_elevation(self, point):
-        layer = self.iface.activeLayer()
-        if not layer or layer.type() != layer.RasterLayer:
-            return
-
-        # 第1バンドの値を取得
-        res = layer.dataProvider().identify(point, QgsRaster.IdentifyFormatValue)
-        if res.isValid():
-            val = res.results().get(1)  # バンド1の値
-            self.iface.messageBar().pushMessage(
-                "情報", f"座標: {point.x():.3f}, {point.y():.3f} / 標高: {val}", level=0
-            )
+def get_active_raster_layer(iface) -> QgsRasterLayer:
+    """選択中の地物レイヤを取得"""
+    layer = iface.activeLayer()  # 選択中のレイヤを取得
+    assert layer is not None
+    assert layer.type() == QgsMapLayerType.RasterLayer
+    return layer

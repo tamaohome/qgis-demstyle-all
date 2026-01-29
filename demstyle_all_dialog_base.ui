@@ -19,11 +19,11 @@
   <property name="windowTitle">
    <string>DEMスタイル一括設定</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="mainLayout">
    <item>
-    <layout class="QHBoxLayout" name="heightValuesLayout">
+    <layout class="QHBoxLayout" name="elevationValuesLayout">
      <item>
-      <widget class="QGroupBox" name="minHeightGroupBox">
+      <widget class="QGroupBox" name="minElevationGroupBox">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
          <horstretch>0</horstretch>
@@ -39,9 +39,9 @@
        <property name="title">
         <string>最小値</string>
        </property>
-       <layout class="QVBoxLayout" name="verticalLayout_2">
+       <layout class="QVBoxLayout" name="minElevationLayout">
         <item>
-         <widget class="QSpinBox" name="minHeightSpinBox">
+         <widget class="QSpinBox" name="minElevationSpinBox">
           <property name="minimumSize">
            <size>
             <width>72</width>
@@ -69,7 +69,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QGroupBox" name="midHeightGroupBox">
+      <widget class="QGroupBox" name="midElevationGroupBox">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
          <horstretch>0</horstretch>
@@ -85,9 +85,9 @@
        <property name="title">
         <string>標高中心</string>
        </property>
-       <layout class="QVBoxLayout" name="verticalLayout_5">
+       <layout class="QVBoxLayout" name="midElevationLayout">
         <item>
-         <widget class="QSpinBox" name="midHeightSpinBox">
+         <widget class="QSpinBox" name="midElevationSpinBox">
           <property name="minimumSize">
            <size>
             <width>72</width>
@@ -115,7 +115,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QGroupBox" name="maxHeightGroupBox">
+      <widget class="QGroupBox" name="maxElevationGroupBox">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
          <horstretch>0</horstretch>
@@ -131,9 +131,9 @@
        <property name="title">
         <string>最大値</string>
        </property>
-       <layout class="QVBoxLayout" name="verticalLayout_3">
+       <layout class="QVBoxLayout" name="maxElevationLayout">
         <item>
-         <widget class="QSpinBox" name="maxHeightSpinBox">
+         <widget class="QSpinBox" name="maxElevationSpinBox">
           <property name="minimumSize">
            <size>
             <width>72</width>
@@ -294,6 +294,9 @@
         <property name="tickInterval">
          <number>1</number>
         </property>
+        <property name="pageStep">
+         <number>1</number>
+        </property>
        </widget>
       </item>
       <item>
@@ -328,6 +331,9 @@
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
      </layout>
@@ -341,7 +347,7 @@
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <layout class="QHBoxLayout" name="dataRangeLayout">
       <property name="spacing">
        <number>0</number>
       </property>
@@ -358,7 +364,7 @@
        <number>0</number>
       </property>
       <item>
-       <widget class="QPushButton" name="setHeightButton">
+       <widget class="QPushButton" name="setElevationButton">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
           <horstretch>0</horstretch>
