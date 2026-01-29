@@ -61,10 +61,10 @@
            <bool>true</bool>
           </property>
           <property name="minimum">
-           <number>-999</number>
+           <number>-9999</number>
           </property>
           <property name="maximum">
-           <number>999</number>
+           <number>9999</number>
           </property>
           <property name="singleStep">
            <number>5</number>
@@ -113,10 +113,10 @@
            <bool>true</bool>
           </property>
           <property name="minimum">
-           <number>-999</number>
+           <number>-9999</number>
           </property>
           <property name="maximum">
-           <number>999</number>
+           <number>9999</number>
           </property>
           <property name="singleStep">
            <number>5</number>
@@ -171,10 +171,10 @@
            <bool>false</bool>
           </property>
           <property name="minimum">
-           <number>-999</number>
+           <number>-9999</number>
           </property>
           <property name="maximum">
-           <number>999</number>
+           <number>9999</number>
           </property>
           <property name="singleStep">
            <number>5</number>

@@ -26,9 +26,11 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from typing import override
 
 from qgis.PyQt.QtCore import Qt
+from qgis.core import Qgis
 from qgis.core import QgsPointXY
 from qgis.core import QgsRaster
 from qgis.core import QgsMapLayerType
@@ -40,11 +42,10 @@ from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtWidgets import QListWidgetItem
 
 from .settings import DialogSettings
+from .create_style_qml import create_style_qml
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
-FORM_CLASS, _ = uic.loadUiType(
-    os.path.join(os.path.dirname(__file__), "demstyle_all_dialog_base.ui")
-)
+FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "demstyle_all_dialog_base.ui"))
 
 DATA_RANGE_VALUES = [5, 10, 20, 50, 100, 200]
 
@@ -72,11 +73,34 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.dataRangeSlider.valueChanged.connect(self.handle_slider_change)
         self.setElevationButton.clicked.connect(self.start_capture_mode)
         self.map_tool.canvasClicked.connect(self.handle_get_elevation)
+        self.dialogButtonBox.accepted.connect(self.on_ok_clicked)
 
         # ダイアログ表示時にOKボタンへフォーカスを設定
         ok_button = self.dialogButtonBox.button(QtWidgets.QDialogButtonBox.Ok)
         if ok_button:
             ok_button.setFocus()
+
+    def on_ok_clicked(self):
+        """OKボタン押下時の処理"""
+        layers = self.get_target_layers()
+
+        # debug: 1枚目の標高設定レイヤのみ対象とする
+        layer = layers[0]
+
+        base_dir = Path(layer.dataProvider().dataSourceUri()).parent
+
+        # スタイルファイル (*.qml) を生成
+        qml_filepath = create_style_qml(base_dir, self.min_elevation, self.max_elevation)
+
+        # スタイルファイル (*.qml) をレイヤに適用
+        layer.loadNamedStyle(str(qml_filepath))
+        self.iface.layerTreeView().refreshLayerSymbology(layer.id())
+        self.iface.mapCanvas().refreshAllLayers()
+
+        # メッセージバーに表示
+        self.iface.messageBar().pushMessage("info", "DEMスタイルの設定が完了しました", Qgis.Info, duration=3)
+
+        self.accept()  # ダイアログを閉じる
 
     def refresh_target_layer_list(self) -> None:
         """標高設定対象のレイヤ一覧を更新する"""
@@ -157,6 +181,18 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.minElevationSpinBox.setValue(min_elevation)
         self.midElevationSpinBox.setValue(mid_elevation)
         self.maxElevationSpinBox.setValue(max_elevation)
+
+    @property
+    def min_elevation(self) -> int:
+        return self.minElevationSpinBox.value()
+
+    @property
+    def mid_elevation(self) -> int:
+        return self.midElevationSpinBox.value()
+
+    @property
+    def max_elevation(self) -> int:
+        return self.maxElevationSpinBox.value()
 
     @override
     def closeEvent(self, event):
