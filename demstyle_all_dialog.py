@@ -145,11 +145,11 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
             # スタイルファイル (*.qml) をレイヤに適用
             layer.loadNamedStyle(str(qml_filepath))
             self.iface.layerTreeView().refreshLayerSymbology(layer.id())
-            self.iface.mapCanvas().refreshAllLayers()
 
         # メッセージバーに表示
         self.iface.messageBar().pushMessage("info", "DEMスタイルの設定が完了しました", Qgis.Info, duration=3)
 
+        self.iface.mapCanvas().refreshAllLayers()  # 描画を更新
         self.accept()  # ダイアログを閉じる
 
     def on_cancel_clicked(self):
