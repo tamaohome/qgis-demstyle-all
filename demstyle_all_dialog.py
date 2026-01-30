@@ -73,8 +73,6 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.refresh_target_layer_list()  # レイヤ一覧を更新
 
-        self.settings.restore_dialog_state(self)  # ダイアログ設定を復元
-
         # シグナル接続
         self.dataRangeSlider.valueChanged.connect(self.handle_slider_change)
         self.setElevationButton.clicked.connect(self.start_capture_mode)
@@ -88,7 +86,11 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
 
     def showEvent(self, event):
         super().showEvent(event)
-        # ダイアログ表示時にOKボタンへフォーカスを設定
+
+        # ダイアログ設定を復元
+        self.settings.restore_dialog_state(self)
+
+        # OKボタンへフォーカスを設定
         ok_button = self.dialogButtonBox.button(QtWidgets.QDialogButtonBox.Ok)
         if ok_button:
             ok_button.setFocus()

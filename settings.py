@@ -3,10 +3,9 @@ from __future__ import annotations
 from pathlib import Path
 
 from qgis.PyQt.QtCore import QSettings, QSize
-from qgis.PyQt.QtWidgets import QMainWindow
 from qgis.PyQt import QtWidgets
 
-INI_FILENAME = "matecon.ini"
+INI_FILENAME = "demstyle_all/demstyle_all.ini"
 DEFAULT_WINDOW_SIZE = QSize(320, 400)
 
 
