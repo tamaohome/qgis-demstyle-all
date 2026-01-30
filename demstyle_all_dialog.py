@@ -262,14 +262,24 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
     def max_elevation(self) -> int:
         return self.maxElevationSpinBox.value()
 
-    @override
-    def closeEvent(self, event):
-        """ウィンドウを閉じる前に設定を保存"""
+    def _save_dialog_state(self) -> None:
+        """ダイアログの設定を保存し、マップツールをリセット"""
         # マップツールが変更されている場合は元に戻す
         if self.previous_map_tool is not None:
             self.canvas.setMapTool(self.previous_map_tool)
         self.settings.save_dialog_state(self)
+
+    @override
+    def closeEvent(self, event):
+        """ウィンドウを閉じる前に設定を保存"""
+        self._save_dialog_state()
         event.accept()
+
+    @override
+    def reject(self):
+        """ダイアログをreject時に設定を保存"""
+        self._save_dialog_state()
+        super().reject()
 
     @override
     def keyPressEvent(self, event):
