@@ -269,6 +269,28 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.settings.save_dialog_state(self)
         event.accept()
 
+    @override
+    def keyPressEvent(self, event):
+        key = event.key()
+        if key == Qt.Key_W:
+            self.midElevationSpinBox.stepUp()
+            event.accept()
+        elif key == Qt.Key_S:
+            self.midElevationSpinBox.stepDown()
+            event.accept()
+        elif key == Qt.Key_A:
+            self.dataRangeSlider.setValue(
+                max(self.dataRangeSlider.minimum(), self.dataRangeSlider.value() - 1)
+            )
+            event.accept()
+        elif key == Qt.Key_D:
+            self.dataRangeSlider.setValue(
+                min(self.dataRangeSlider.maximum(), self.dataRangeSlider.value() + 1)
+            )
+            event.accept()
+        else:
+            super().keyPressEvent(event)
+
     def get_elevation_from_target_layers(self, point: QgsPointXY) -> float | None:
         """全てのターゲットレイヤから標高を取得する"""
         # ターゲットレイヤ配列を取得
