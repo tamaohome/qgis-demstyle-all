@@ -84,6 +84,9 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.dialogButtonBox.rejected.connect(self.on_cancel_clicked)
         self.searchStringLineEdit.textChanged.connect(self.refresh_target_layer_list)
 
+        # OKボタンの初期状態を設定
+        self._update_ok_button_state()
+
     def showEvent(self, event):
         super().showEvent(event)
 
@@ -108,6 +111,8 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.midElevationSpinBox.blockSignals(False)
         self.maxElevationSpinBox.blockSignals(False)
 
+        self._update_ok_button_state()
+
     def on_mid_elevation_changed(self):
         data_range = self.get_current_data_range()
         mid_value = self.midElevationSpinBox.value()
@@ -121,6 +126,8 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.minElevationSpinBox.blockSignals(False)
         self.maxElevationSpinBox.blockSignals(False)
 
+        self._update_ok_button_state()
+
     def on_max_elevation_changed(self):
         data_range = self.get_current_data_range()
         max_value = self.maxElevationSpinBox.value()
@@ -133,6 +140,8 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.midElevationSpinBox.setValue(mid_value)
         self.minElevationSpinBox.blockSignals(False)
         self.midElevationSpinBox.blockSignals(False)
+
+        self._update_ok_button_state()
 
     def on_ok_clicked(self):
         """OKボタン押下時の処理"""
@@ -246,6 +255,9 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         # スピンボックスに値をセット
         self.midElevationSpinBox.setValue(mid_elevation)
 
+        # OKボタンの状態を更新
+        self._update_ok_button_state()
+
         # マップツールが変更されている場合は元に戻す
         if self.previous_map_tool is not None:
             self.canvas.setMapTool(self.previous_map_tool)
@@ -261,6 +273,17 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
     @property
     def max_elevation(self) -> int:
         return self.maxElevationSpinBox.value()
+
+    @property
+    def has_elevation(self) -> bool:
+        """標高がセットされている場合 True を返す"""
+        return any([self.min_elevation, self.mid_elevation, self.max_elevation])
+
+    def _update_ok_button_state(self) -> None:
+        """has_elevation の値に基づいてOKボタンの有効/無効を更新"""
+        ok_button = self.dialogButtonBox.button(QtWidgets.QDialogButtonBox.Ok)
+        if ok_button:
+            ok_button.setEnabled(self.has_elevation)
 
     def _save_dialog_state(self) -> None:
         """ダイアログの設定を保存し、マップツールをリセット"""
