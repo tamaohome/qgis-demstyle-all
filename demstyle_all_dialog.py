@@ -162,7 +162,13 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
     def refresh_target_layer_list(self) -> None:
         """標高設定対象のレイヤ一覧を更新する"""
         self.layerListWidget.clear()  # リストを初期化
-        layers = QgsProject.instance().mapLayers().values()  # 全レイヤを取得
+        # layers = QgsProject.instance().mapLayers().values()  # 全レイヤを取得
+
+        # レイヤツリーのルートを取得
+        root = QgsProject.instance().layerTreeRoot()
+        # レイヤリストをツリー順で取得
+        layers = [layer_node.layer() for layer_node in root.findLayers()]
+
         search_string = self.get_current_search_string()  # 検索文字列を取得
 
         for layer in layers:
