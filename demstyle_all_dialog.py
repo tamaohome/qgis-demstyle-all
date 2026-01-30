@@ -98,50 +98,49 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         if ok_button:
             ok_button.setFocus()
 
-    def on_min_elevation_changed(self):
+    def _update_elevation_values(self, source: str) -> None:
+        """標高値を更新する（source: 'min' | 'mid' | 'max'）"""
         data_range = self.get_current_data_range()
-        min_value = self.minElevationSpinBox.value()
-        mid_value = min_value + data_range
-        max_value = mid_value + data_range
 
+        # 値を計算
+        if source == "min":
+            min_value = self.minElevationSpinBox.value()
+            mid_value = min_value + data_range
+            max_value = mid_value + data_range
+        elif source == "mid":
+            mid_value = self.midElevationSpinBox.value()
+            min_value = mid_value - data_range
+            max_value = mid_value + data_range
+        else:  # source == "max"
+            max_value = self.maxElevationSpinBox.value()
+            mid_value = max_value - data_range
+            min_value = mid_value - data_range
+
+        # 全てのシグナルをブロック
+        self.minElevationSpinBox.blockSignals(True)
         self.midElevationSpinBox.blockSignals(True)
         self.maxElevationSpinBox.blockSignals(True)
+
+        # 値を設定
+        self.minElevationSpinBox.setValue(min_value)
         self.midElevationSpinBox.setValue(mid_value)
         self.maxElevationSpinBox.setValue(max_value)
+
+        # シグナルを解除
+        self.minElevationSpinBox.blockSignals(False)
         self.midElevationSpinBox.blockSignals(False)
         self.maxElevationSpinBox.blockSignals(False)
 
         self._update_ok_button_state()
 
-    def on_mid_elevation_changed(self):
-        data_range = self.get_current_data_range()
-        mid_value = self.midElevationSpinBox.value()
-        min_value = mid_value - data_range
-        max_value = mid_value + data_range
+    def on_min_elevation_changed(self) -> None:
+        self._update_elevation_values("min")
 
-        self.minElevationSpinBox.blockSignals(True)
-        self.maxElevationSpinBox.blockSignals(True)
-        self.minElevationSpinBox.setValue(min_value)
-        self.maxElevationSpinBox.setValue(max_value)
-        self.minElevationSpinBox.blockSignals(False)
-        self.maxElevationSpinBox.blockSignals(False)
+    def on_mid_elevation_changed(self) -> None:
+        self._update_elevation_values("mid")
 
-        self._update_ok_button_state()
-
-    def on_max_elevation_changed(self):
-        data_range = self.get_current_data_range()
-        max_value = self.maxElevationSpinBox.value()
-        mid_value = max_value - data_range
-        min_value = mid_value - data_range
-
-        self.minElevationSpinBox.blockSignals(True)
-        self.midElevationSpinBox.blockSignals(True)
-        self.minElevationSpinBox.setValue(min_value)
-        self.midElevationSpinBox.setValue(mid_value)
-        self.minElevationSpinBox.blockSignals(False)
-        self.midElevationSpinBox.blockSignals(False)
-
-        self._update_ok_button_state()
+    def on_max_elevation_changed(self) -> None:
+        self._update_elevation_values("max")
 
     def on_ok_clicked(self):
         """OKボタン押下時の処理"""
