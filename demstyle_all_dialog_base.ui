@@ -20,6 +20,9 @@
    <string>DEMスタイル一括設定</string>
   </property>
   <layout class="QVBoxLayout" name="mainLayout">
+   <property name="spacing">
+    <number>12</number>
+   </property>
    <item>
     <layout class="QHBoxLayout" name="elevationValuesLayout">
      <item>
@@ -422,7 +425,7 @@
          </size>
         </property>
         <property name="styleSheet">
-         <string notr="true">QPushButton { min-height: 48px; }</string>
+         <string notr="true">QPushButton { min-height: 48px; font-family: 'ＭＳ ゴシック'; font-size: 10pt; }</string>
         </property>
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
