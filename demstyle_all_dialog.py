@@ -84,6 +84,8 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.dialogButtonBox.accepted.connect(self.on_ok_clicked)
         self.searchStringLineEdit.textChanged.connect(self.refresh_target_layer_list)
 
+    def showEvent(self, event):
+        super().showEvent(event)
         # ダイアログ表示時にOKボタンへフォーカスを設定
         ok_button = self.dialogButtonBox.button(QtWidgets.QDialogButtonBox.Ok)
         if ok_button:
