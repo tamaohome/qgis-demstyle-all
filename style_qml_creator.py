@@ -68,8 +68,8 @@ class StyleQmlCreator:
 
         return qml_lines
 
-    def _item_line_template(self, value: str, label: str, color: str) -> str:
+    def _item_line_template(self, value: int, label: int, color: str) -> str:
         indent = "    "
         alpha = "255"
-        line = f"<item {value=} {label=} {alpha=} {color=} />\n"
+        line = f'<item value="{value}" label="{label}" alpha="{alpha}" color="{color}" />\n'
         return indent * 2 + line
