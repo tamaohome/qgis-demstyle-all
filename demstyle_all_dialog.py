@@ -42,7 +42,7 @@ from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtWidgets import QListWidgetItem
 
 from .settings import DialogSettings
-from .create_style_qml import create_style_qml
+from .style_qml_creator import StyleQmlCreator
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "demstyle_all_dialog_base.ui"))
@@ -131,12 +131,12 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
     def on_ok_clicked(self):
         """OKボタン押下時の処理"""
         layers = self.get_target_layers()
+        qml_creator = StyleQmlCreator(self.min_elevation, self.max_elevation)
 
         for layer in layers:
-            base_dir = Path(layer.dataProvider().dataSourceUri()).parent
-
             # スタイルファイル (*.qml) を生成
-            qml_filepath = create_style_qml(base_dir, self.min_elevation, self.max_elevation)
+            base_dir = Path(layer.dataProvider().dataSourceUri()).parent
+            qml_filepath = qml_creator.create_style_qml_file(base_dir)
 
             # スタイルファイル (*.qml) をレイヤに適用
             layer.loadNamedStyle(str(qml_filepath))
@@ -219,16 +219,11 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
             QtWidgets.QMessageBox.warning(self, "エラー", message)
             return
 
-        # 最小、中心、最大の標高を算出
-        data_range = self.get_current_data_range()
-        mid_elevation = int(round(elevation / 5) * 5)  # 標高地の値を丸め
-        min_elevation = mid_elevation - data_range
-        max_elevation = mid_elevation + data_range
+        # 標高中心を5単位で数字丸め
+        mid_elevation = round(elevation / 5) * 5
 
         # スピンボックスに値をセット
-        self.minElevationSpinBox.setValue(min_elevation)
         self.midElevationSpinBox.setValue(mid_elevation)
-        self.maxElevationSpinBox.setValue(max_elevation)
 
     @property
     def min_elevation(self) -> int:
@@ -259,9 +254,6 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
 
             if not res.isValid():
                 continue
-                # message = "標高値の取得に失敗しました (0)"
-                # QtWidgets.QMessageBox.warning(self, "エラー", message)
-                # return
 
             # 結果は辞書形式 {バンド番号: 値} で返される (通常、DEMは第1バンド)
             results = res.results()
@@ -271,4 +263,4 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
                 return elevation
 
         # 標高値の取得に失敗した場合 None を返す
-        return
+        return None
