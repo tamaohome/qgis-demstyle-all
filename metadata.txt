@@ -3,18 +3,18 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
-name=DEM Style All
+name=DEMスタイル一括設定
 qgisMinimumVersion=3.0
-description=DEMスタイル一括設定
+description=
 version=0.1
 author=
 email=
 
 
-about=Provide a brief description of the plugin and its purpose.
+# about=Provide a brief description of the plugin and its purpose.
 
-tracker=http://bugs
-repository=http://repo
+# tracker=http://bugs
+# repository=http://repo
 # End of mandatory metadata
 
 # Recommended items:
@@ -26,7 +26,7 @@ hasProcessingProvider=no
 # Tags are comma separated with spaces allowed
 tags=python
 
-homepage=http://homepage
+# homepage=http://homepage
 category=Plugins
 icon=icon.png
 # experimental flag
