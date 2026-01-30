@@ -82,6 +82,7 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.maxElevationSpinBox.valueChanged.connect(self.on_max_elevation_changed)
         self.map_tool.canvasClicked.connect(self.handle_get_elevation)
         self.dialogButtonBox.accepted.connect(self.on_ok_clicked)
+        self.searchStringLineEdit.textChanged.connect(self.refresh_target_layer_list)
 
         # ダイアログ表示時にOKボタンへフォーカスを設定
         ok_button = self.dialogButtonBox.button(QtWidgets.QDialogButtonBox.Ok)
