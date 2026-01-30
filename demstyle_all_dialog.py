@@ -59,7 +59,7 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.setupUi(self)
 
         self.canvas = self.iface.mapCanvas()
-        self.map_tool = QgsMapToolEmitPoint(self.canvas)
+        self.map_tool = MouseReleaseMapTool(self.canvas)
 
         # 初回起動時のデータレンジ値設定
         self.dataRangeSlider.setValue(2)
@@ -266,3 +266,22 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
 
         # 標高値の取得に失敗した場合 None を返す
         return None
+
+
+class MouseReleaseMapTool(QgsMapToolEmitPoint):
+    """マウスリリースにより発火するマップツール"""
+
+    def __init__(self, canvas):
+        super().__init__(canvas)
+
+    def canvasPressEvent(self, event):
+        # マウス押下時の挙動を無効化
+        pass
+
+    def canvasReleaseEvent(self, event):
+        # マウスが離された位置の地図座標を取得
+        point = self.toMapCoordinates(event.pos())
+
+        # 本来クリック時に飛ぶはずの canvasClicked シグナルを
+        # リリースのタイミングで手動で発信（emit）する
+        self.canvasClicked.emit(point, event.button())
