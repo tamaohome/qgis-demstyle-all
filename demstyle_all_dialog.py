@@ -83,6 +83,7 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.maxElevationSpinBox.valueChanged.connect(self.on_max_elevation_changed)
         self.map_tool.canvasClicked.connect(self.handle_get_elevation)
         self.dialogButtonBox.accepted.connect(self.on_ok_clicked)
+        self.dialogButtonBox.rejected.connect(self.on_cancel_clicked)
         self.searchStringLineEdit.textChanged.connect(self.refresh_target_layer_list)
 
     def showEvent(self, event):
@@ -150,6 +151,13 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.iface.messageBar().pushMessage("info", "DEMスタイルの設定が完了しました", Qgis.Info, duration=3)
 
         self.accept()  # ダイアログを閉じる
+
+    def on_cancel_clicked(self):
+        """キャンセルボタン押下時の処理"""
+        # マップツールが変更されている場合は元に戻す
+        if self.previous_map_tool is not None:
+            self.canvas.setMapTool(self.previous_map_tool)
+        self.reject()  # ダイアログを閉じる
 
     def refresh_target_layer_list(self) -> None:
         """標高設定対象のレイヤ一覧を更新する"""
