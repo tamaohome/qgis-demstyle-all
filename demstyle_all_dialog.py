@@ -60,6 +60,7 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.canvas = self.iface.mapCanvas()
         self.map_tool = MouseReleaseMapTool(self.canvas)
+        self.previous_map_tool = None  # 以前の地図ツールを保存
 
         # 初回起動時のデータレンジ値設定
         self.dataRangeSlider.setValue(2)
@@ -203,6 +204,8 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
 
     def start_capture_mode(self) -> None:
         """地図キャンバス上の標高をマウスクリックで取得するモード"""
+        # 現在の地図ツールを保存
+        self.previous_map_tool = self.canvas.mapTool()
         self.canvas.setMapTool(self.map_tool)
 
     def handle_get_elevation(self, point, button) -> None:
@@ -227,6 +230,10 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         # スピンボックスに値をセット
         self.midElevationSpinBox.setValue(mid_elevation)
 
+        # マップツールが変更されている場合は元に戻す
+        if self.previous_map_tool is not None:
+            self.canvas.setMapTool(self.previous_map_tool)
+
     @property
     def min_elevation(self) -> int:
         return self.minElevationSpinBox.value()
@@ -242,6 +249,9 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
     @override
     def closeEvent(self, event):
         """ウィンドウを閉じる前に設定を保存"""
+        # マップツールが変更されている場合は元に戻す
+        if self.previous_map_tool is not None:
+            self.canvas.setMapTool(self.previous_map_tool)
         self.settings.save_dialog_state(self)
         event.accept()
 
