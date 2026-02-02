@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>270</width>
-    <height>500</height>
+    <height>512</height>
    </rect>
   </property>
   <property name="font">
@@ -115,24 +115,31 @@
          <string>標高設定</string>
         </property>
         <layout class="QGridLayout" name="elevationValueLayout">
-         <item row="0" column="0">
-          <widget class="QLabel" name="minElevationLabel">
-           <property name="text">
-            <string>最小値</string>
+         <item row="1" column="2">
+          <widget class="QSpinBox" name="maxElevationSpinBox">
+           <property name="minimumSize">
+            <size>
+             <width>72</width>
+             <height>0</height>
+            </size>
            </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QLabel" name="midElevationLabel">
-           <property name="text">
-            <string>標高中心</string>
+           <property name="font">
+            <font>
+             <family>ＭＳ ゴシック</family>
+             <pointsize>12</pointsize>
+            </font>
            </property>
-          </widget>
-         </item>
-         <item row="0" column="2">
-          <widget class="QLabel" name="maxElevationLabel">
-           <property name="text">
-            <string>最大値</string>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="minimum">
+            <number>-9999</number>
+           </property>
+           <property name="maximum">
+            <number>9999</number>
+           </property>
+           <property name="singleStep">
+            <number>5</number>
            </property>
           </widget>
          </item>
@@ -170,6 +177,20 @@
            </property>
           </widget>
          </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="minElevationLabel">
+           <property name="text">
+            <string>最小値</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLabel" name="midElevationLabel">
+           <property name="text">
+            <string>標高中心</string>
+           </property>
+          </widget>
+         </item>
          <item row="1" column="1">
           <widget class="QSpinBox" name="midElevationSpinBox">
            <property name="minimumSize">
@@ -198,31 +219,20 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="2">
-          <widget class="QSpinBox" name="maxElevationSpinBox">
-           <property name="minimumSize">
-            <size>
-             <width>72</width>
-             <height>0</height>
-            </size>
+         <item row="0" column="2">
+          <widget class="QLabel" name="maxElevationLabel">
+           <property name="text">
+            <string>最大値</string>
            </property>
-           <property name="font">
-            <font>
-             <family>ＭＳ ゴシック</family>
-             <pointsize>12</pointsize>
-            </font>
+          </widget>
+         </item>
+         <item row="2" column="0" colspan="3">
+          <widget class="QCheckBox" name="enableCurrentFeatureElevCheckBox">
+           <property name="text">
+            <string>選択中の盛土に合わせる</string>
            </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-           <property name="minimum">
-            <number>-9999</number>
-           </property>
-           <property name="maximum">
-            <number>9999</number>
-           </property>
-           <property name="singleStep">
-            <number>5</number>
+           <property name="checked">
+            <bool>true</bool>
            </property>
           </widget>
          </item>

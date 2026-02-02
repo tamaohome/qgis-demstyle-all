@@ -260,6 +260,17 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.raise_()
         self.activateWindow()
 
+    def _validate_elevation_value(self, value: float) -> int:
+        """標高値を検証し、5の倍数に丸める"""
+        try:
+            validated = round(value / 5) * 5
+            if value % 5 != 0:
+                # 値が5の倍数でない場合、ログに警告を出力
+                pass  # 必要に応じて警告を追加
+            return int(validated)
+        except (ValueError, TypeError):
+            return 0
+
     def _init_current_feature_table(self) -> None:
         """currentFeatureTableWidgetを初期化する"""
         self.currentFeatureTableWidget.clear()
@@ -294,8 +305,13 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
 
         # 1行データを取得
         feature_no = feature.attribute("No")
-        min_elev = feature.attribute("標高下")
-        max_elev = feature.attribute("標高上")
+        min_elev_raw = feature.attribute("標高下")
+        max_elev_raw = feature.attribute("標高上")
+
+        # 標高値を検証（5の倍数に丸める）
+        min_elev = self._validate_elevation_value(min_elev_raw)
+        max_elev = self._validate_elevation_value(max_elev_raw)
+        mid_elev = self._validate_elevation_value((max_elev + min_elev) / 2)
 
         # テーブルに1行追加
         self.currentFeatureTableWidget.insertRow(0)
@@ -304,6 +320,10 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.currentFeatureTableWidget.setItem(0, 0, QTableWidgetItem(str(feature_no)))
         self.currentFeatureTableWidget.setItem(0, 1, self._create_numeric_table_item(min_elev))
         self.currentFeatureTableWidget.setItem(0, 2, self._create_numeric_table_item(max_elev))
+
+        # enableCurrentFeatureElevCheckBox がチェックされている場合、midElevationSpinBox に値を設定
+        if self.enableCurrentFeatureElevCheckBox.isChecked():
+            self.midElevationSpinBox.setValue(mid_elev)
 
         # 現在の設定標高と一致する場合、ハイライト表示
         self._highlight_matching_elevation()
