@@ -265,6 +265,9 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.currentFeatureTableWidget.setRowCount(0)
         self.currentFeatureTableWidget.setColumnCount(3)
 
+        # 行番号を非表示
+        self.currentFeatureTableWidget.verticalHeader().setVisible(False)
+
         # ヘッダを設定
         headers = ["No", "標高上", "標高下"]
         self.currentFeatureTableWidget.setHorizontalHeaderLabels(headers)
