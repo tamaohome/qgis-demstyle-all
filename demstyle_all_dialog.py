@@ -269,7 +269,7 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.currentFeatureTableWidget.verticalHeader().setVisible(False)
 
         # ヘッダを設定
-        headers = ["No", "標高上", "標高下"]
+        headers = ["No", "標高下", "標高上"]
         self.currentFeatureTableWidget.setHorizontalHeaderLabels(headers)
 
         # 選択中の地物が存在しない場合は中止
@@ -283,19 +283,30 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
 
         # 1行データを取得
         feature_no = feature.attribute("No")
-        elevation_top = feature.attribute("標高上")
-        elevation_bottom = feature.attribute("標高下")
+        min_elev = feature.attribute("標高下")
+        max_elev = feature.attribute("標高上")
 
         # テーブルに1行追加
         self.currentFeatureTableWidget.insertRow(0)
 
         # 各セルにデータを設定
         self.currentFeatureTableWidget.setItem(0, 0, QTableWidgetItem(str(feature_no)))
-        self.currentFeatureTableWidget.setItem(0, 1, QTableWidgetItem(str(elevation_top)))
-        self.currentFeatureTableWidget.setItem(0, 2, QTableWidgetItem(str(elevation_bottom)))
+        self.currentFeatureTableWidget.setItem(0, 1, self._create_numeric_table_item(min_elev))
+        self.currentFeatureTableWidget.setItem(0, 2, self._create_numeric_table_item(max_elev))
 
         # カラムを自動調整
         self.currentFeatureTableWidget.resizeColumnsToContents()
+
+    def _create_numeric_table_item(self, value) -> QTableWidgetItem:
+        """数値セルを作成する（右揃え、無効な値は"-"を表示）"""
+        try:
+            text = str(int(value)) if value is not None else "-"
+        except (ValueError, TypeError):
+            text = "-"
+
+        item = QTableWidgetItem(text)
+        item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        return item
 
     def _pan_to_feature(self) -> None:
         """地物の中心にキャンバスをパンする"""
