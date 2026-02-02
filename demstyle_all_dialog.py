@@ -97,6 +97,10 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         # OKボタンへフォーカスを設定
         self.okButton.setFocus()
 
+        # ダイアログを最前面に表示
+        self.raise_()
+        self.activateWindow()
+
     def _update_elevation_values(self, source: str) -> None:
         """標高値を更新する（source: 'min' | 'mid' | 'max'）"""
         data_range = self.get_current_data_range()

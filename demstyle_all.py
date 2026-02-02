@@ -178,6 +178,9 @@ class DEMStyleAll:
 
         # show the dialog
         self.dlg.show()
+        # ダイアログを最前面に表示してアクティブにする
+        self.dlg.raise_()
+        self.dlg.activateWindow()
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed
