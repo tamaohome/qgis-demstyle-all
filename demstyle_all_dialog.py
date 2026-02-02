@@ -294,8 +294,10 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.currentFeatureTableWidget.setItem(0, 1, self._create_numeric_table_item(min_elev))
         self.currentFeatureTableWidget.setItem(0, 2, self._create_numeric_table_item(max_elev))
 
-        # カラムを自動調整
-        self.currentFeatureTableWidget.resizeColumnsToContents()
+        # 列幅を設定
+        self.currentFeatureTableWidget.setColumnWidth(0, 96)
+        self.currentFeatureTableWidget.setColumnWidth(1, 52)
+        self.currentFeatureTableWidget.setColumnWidth(2, 52)
 
     def _create_numeric_table_item(self, value) -> QTableWidgetItem:
         """数値セルを作成する（右揃え、無効な値は"-"を表示）"""
