@@ -29,14 +29,15 @@ import os
 from pathlib import Path
 from typing import override
 
-from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtCore import Qt, QTimer
+from qgis.PyQt.QtGui import QColor
 from qgis.core import Qgis
 from qgis.core import QgsPointXY
 from qgis.core import QgsRaster
 from qgis.core import QgsMapLayerType
 from qgis.core import QgsRasterLayer
 from qgis.core import QgsProject
-from qgis.gui import QgsMapToolEmitPoint
+from qgis.gui import QgsMapToolEmitPoint, QgsRubberBand
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtWidgets import QListWidgetItem
@@ -84,6 +85,8 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.cancelButton.clicked.connect(self.on_cancel_clicked)
         self.searchStringLineEdit.textChanged.connect(self.refresh_target_layer_list)
 
+        self.iface.layerTreeView().currentLayerChanged.connect(self.on_active_layer_changed)
+
         # OKボタンの初期状態を設定
         self._update_ok_button_state()
 
@@ -96,6 +99,10 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
 
         # OKボタンへフォーカスを設定
         self.okButton.setFocus()
+
+        # アクティブレイヤおよび選択中の地物を更新
+        self.on_active_layer_changed()
+        self.on_attribute_selection_changed()
 
         # ダイアログを最前面に表示
         self.raise_()
@@ -160,7 +167,13 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
             self.iface.layerTreeView().refreshLayerSymbology(layer.id())
 
         # メッセージバーに表示
+        self.iface.messageBar().clearWidgets()
         self.iface.messageBar().pushMessage("info", "DEMスタイルの設定が完了しました", Qgis.Info, duration=3)
+
+        # 属性テーブルの標高を書き出す
+        # max_elev = self.max_elevation
+        # min_elev = self.min_elevation
+        # self.write_attr_elev_table(max_elev, min_elev)
 
         self.iface.mapCanvas().refreshAllLayers()  # 描画を更新
         self.accept()  # ダイアログを閉じる
@@ -171,6 +184,117 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         if self.previous_map_tool is not None:
             self.canvas.setMapTool(self.previous_map_tool)
         self.reject()  # ダイアログを閉じる
+
+    def on_active_layer_changed(self):
+        """アクティブレイヤ変更時の処理"""
+        # ウィンドウが非表示の場合は何もしない
+        if not self.isVisible():
+            return
+
+        # 現在選択されているレイヤを取得
+        layer = self.iface.activeLayer()
+        # layer_name = layer.name() if layer else "選択なし"
+
+        # メッセージバーを表示
+        # title = "レイヤ変更"
+        # message = f"現在のレイヤ: {layer_name}"
+        # self.iface.messageBar().clearWidgets()
+        # self.iface.messageBar().pushMessage(title, message, level=Qgis.Info, duration=3)
+
+        # 前のレイヤのシグナルを切断
+        if hasattr(self, "_current_layer") and self._current_layer is not None:
+            self._current_layer.selectionChanged.disconnect(self.on_attribute_selection_changed)
+
+        # 新しいレイヤのシグナルをコネクト
+        self._current_layer = layer
+        if layer is not None:
+            layer.selectionChanged.connect(self.on_attribute_selection_changed)
+
+    def on_attribute_selection_changed(self):
+        """属性テーブルの選択変更時の処理"""
+        # ウィンドウが非表示の場合は中止
+        if not self.isVisible():
+            return
+
+        # アクティブレイヤが存在しない場合は中止
+        if self._current_layer is None:
+            return
+
+        # 選択済み地物を取得
+        selected_ids = self._current_layer.selectedFeatureIds()
+        if not selected_ids:
+            return
+
+        # 最初の選択済み地物を取得
+        feature_id = selected_ids[0]
+
+        # 地物オブジェクトを取得
+        self._current_feature = self._current_layer.getFeature(feature_id)
+        if not self._current_feature.isValid():
+            return
+
+        # "No"列のデータを取得
+        feature_no = self._current_feature.attribute("No")
+
+        # メッセージバーを表示
+        title = "地物選択変更"
+        message = f"レイヤ={self._current_layer.name()}, 地物No={feature_no}"
+        self.iface.messageBar().clearWidgets()
+        self.iface.messageBar().pushMessage(title, message, level=Qgis.Info, duration=3)
+
+        # 選択(黄色フィル表示)を解除
+        self._current_layer.removeSelection()
+
+        # 地物にパン
+        self._pan_to_feature()
+
+        # 地物を強調表示
+        self._highlight_feature()
+
+        # ダイアログを最前面に表示
+        self.raise_()
+        self.activateWindow()
+
+    def _pan_to_feature(self) -> None:
+        """地物の中心にキャンバスをパンする"""
+        # 「自動的に盛土中心にパン」が有効化されていない場合は中止
+        if not self.enableAutoPanCheckBox.isChecked():
+            return
+
+        # 選択中の地物が存在しない場合は中止
+        try:
+            feature = self._current_feature
+        except Exception:
+            return
+
+        geometry = feature.geometry()
+        center_point = geometry.centroid().asPoint()
+        self.canvas.setCenter(center_point)
+        self.canvas.refresh()
+
+    def _highlight_feature(self) -> None:
+        """選択中の地物をハイライト"""
+        # アクティブなレイヤを取得
+        layer = self._current_layer
+        if not layer:
+            return
+
+        # 選択中の地物が存在しない場合は中止
+        try:
+            feature = self._current_feature
+        except Exception:
+            return
+
+        geometry = feature.geometry()
+
+        highlight_color = QColor(255, 255, 0)  # 黄色
+        rubber_band = QgsRubberBand(self.canvas)
+        rubber_band.setToGeometry(geometry, layer)
+        rubber_band.setStrokeColor(highlight_color)
+        rubber_band.setWidth(3)  # ボーダー幅
+
+        # 一定時間後に削除
+        QTimer.singleShot(200, lambda: self.canvas.scene().removeItem(rubber_band))
 
     def refresh_target_layer_list(self) -> None:
         """標高設定対象のレイヤ一覧を更新する"""
@@ -230,8 +354,12 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
 
     def start_capture_mode(self) -> None:
         """地図キャンバス上の標高をマウスクリックで取得するモード"""
+        # 選択中の地物をハイライト
+        self._highlight_feature()
+
         # 現在の地図ツールを保存
         self.previous_map_tool = self.canvas.mapTool()
+
         self.canvas.setMapTool(self.map_tool)
 
     def handle_get_elevation(self, point, button) -> None:
