@@ -173,9 +173,9 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.iface.messageBar().pushMessage("info", "DEMスタイルの設定が完了しました", Qgis.Info, duration=3)
 
         # 属性テーブルの標高を書き出す
-        # max_elev = self.max_elevation
-        # min_elev = self.min_elevation
-        # self.write_attr_elev_table(max_elev, min_elev)
+        max_elev = self.max_elevation
+        min_elev = self.min_elevation
+        self.write_attr_elev_table(max_elev, min_elev)
 
         self.iface.mapCanvas().refreshAllLayers()  # 描画を更新
         self.accept()  # ダイアログを閉じる
@@ -595,6 +595,44 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
 
         # 標高値の取得に失敗した場合 None を返す
         return None
+
+    def write_attr_elev_table(self, max_elev: int, min_elev: int) -> None:
+        """属性テーブルの標高値を書き出す"""
+        # 現在のレイヤを取得
+        try:
+            layer = self._current_layer
+        except Exception:
+            return
+
+        if layer is None:
+            return
+
+        # ベクタレイヤでない場合は中止
+        if layer.type() != QgsMapLayerType.VectorLayer:
+            return
+
+        # 現在選択されている地物を取得
+        try:
+            feature = self._current_feature
+        except Exception:
+            return
+
+        if not feature.isValid():
+            return
+
+        # フィールド名のインデックスを取得
+        min_field_idx = layer.fields().indexOf("標高下")
+        max_field_idx = layer.fields().indexOf("標高上")
+
+        # フィールドが存在しない場合は中止
+        if min_field_idx == -1 or max_field_idx == -1:
+            return
+
+        # 選択中の地物のみ属性を更新
+        changes = {feature.id(): {min_field_idx: min_elev, max_field_idx: max_elev}}
+        layer.beginEditCommand("標高値を更新")
+        layer.dataProvider().changeAttributeValues(changes)
+        layer.endEditCommand()
 
 
 class MouseReleaseMapTool(QgsMapToolEmitPoint):
