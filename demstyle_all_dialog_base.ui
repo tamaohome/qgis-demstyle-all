@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>270</width>
-    <height>475</height>
+    <height>500</height>
    </rect>
   </property>
   <property name="font">
@@ -19,7 +19,63 @@
   <property name="windowTitle">
    <string>DEMスタイル一括設定</string>
   </property>
-  <layout class="QVBoxLayout" name="controlLayout">
+  <layout class="QVBoxLayout" name="Layout">
+   <item>
+    <widget class="QGroupBox" name="currentFeatureGroupBox">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="title">
+      <string>選択中の盛土</string>
+     </property>
+     <layout class="QVBoxLayout" name="currentFeatureLayout">
+      <item>
+       <widget class="QTableWidget" name="currentFeatureTableWidget">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>40</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="enableAttrTableUpdateCheckBox">
+        <property name="toolTip">
+         <string>OKボタン押下時にアクティブな属性テーブルの&quot;標高上&quot;, &quot;標高下&quot; を書き換えます。</string>
+        </property>
+        <property name="text">
+         <string>属性テーブル更新を有効化</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
    <item>
     <widget class="QWidget" name="controlWidget" native="true">
      <layout class="QVBoxLayout" name="controlLayout">
