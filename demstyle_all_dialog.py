@@ -40,7 +40,7 @@ from qgis.core import QgsProject
 from qgis.gui import QgsMapToolEmitPoint, QgsRubberBand
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
-from qgis.PyQt.QtWidgets import QListWidgetItem
+from qgis.PyQt.QtWidgets import QListWidgetItem, QTableWidgetItem
 
 from .settings import DialogSettings
 from .style_qml_creator import StyleQmlCreator
@@ -245,6 +245,9 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         # 選択(黄色フィル表示)を解除
         self._current_layer.removeSelection()
 
+        # currentFeatureTableWidgetを更新
+        self._update_current_feature_table()
+
         # 地物にパン
         self._pan_to_feature()
 
@@ -254,6 +257,42 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         # ダイアログを最前面に表示
         self.raise_()
         self.activateWindow()
+
+    def _update_current_feature_table(self) -> None:
+        """currentFeatureTableWidgetを更新する"""
+        # テーブルをクリア
+        self.currentFeatureTableWidget.clear()
+        self.currentFeatureTableWidget.setRowCount(0)
+        self.currentFeatureTableWidget.setColumnCount(3)
+
+        # ヘッダを設定
+        headers = ["No", "標高上", "標高下"]
+        self.currentFeatureTableWidget.setHorizontalHeaderLabels(headers)
+
+        # 選択中の地物が存在しない場合は中止
+        try:
+            feature = self._current_feature
+        except Exception:
+            return
+
+        if not feature.isValid():
+            return
+
+        # 1行データを取得
+        feature_no = feature.attribute("No")
+        elevation_top = feature.attribute("標高上")
+        elevation_bottom = feature.attribute("標高下")
+
+        # テーブルに1行追加
+        self.currentFeatureTableWidget.insertRow(0)
+
+        # 各セルにデータを設定
+        self.currentFeatureTableWidget.setItem(0, 0, QTableWidgetItem(str(feature_no)))
+        self.currentFeatureTableWidget.setItem(0, 1, QTableWidgetItem(str(elevation_top)))
+        self.currentFeatureTableWidget.setItem(0, 2, QTableWidgetItem(str(elevation_bottom)))
+
+        # カラムを自動調整
+        self.currentFeatureTableWidget.resizeColumnsToContents()
 
     def _pan_to_feature(self) -> None:
         """地物の中心にキャンバスをパンする"""
