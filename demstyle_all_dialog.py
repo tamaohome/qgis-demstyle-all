@@ -25,7 +25,6 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import override
 
@@ -46,7 +45,21 @@ from .settings import DialogSettings
 from .style_qml_creator import StyleQmlCreator
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
-FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "demstyle_all_dialog_base.ui"))
+FORM_CLASS, _ = uic.loadUiType(str(Path(__file__).parent / "demstyle_all_dialog_base.ui"))
+
+
+def get_version():
+    """メタデータファイルからバージョンを取得"""
+    metadata_file = Path(__file__).parent / "metadata.txt"
+    try:
+        with open(metadata_file, "r", encoding="utf-8") as f:
+            for line in f:
+                if line.startswith("version="):
+                    return line.split("=", 1)[1].strip()
+    except Exception:
+        pass
+    return "unknown"
+
 
 DATA_RANGE_VALUES = [10, 20, 50, 100, 200, 500]
 
@@ -58,6 +71,10 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.iface = iface
         self.settings = DialogSettings()
         self.setupUi(self)
+
+        # ウィンドウタイトルにバージョン情報を追加
+        version = get_version()
+        self.setWindowTitle(f"DEMスタイル一括設定 (v{version})")
 
         self.canvas = self.iface.mapCanvas()
         self.map_tool = MouseReleaseMapTool(self.canvas)
