@@ -122,7 +122,7 @@
           </widget>
          </item>
          <item row="1" column="0">
-          <widget class="QSpinBox" name="maxElevationSpinBox">
+          <widget class="QSpinBox" name="minElevationSpinBox">
            <property name="minimumSize">
             <size>
              <width>72</width>
@@ -156,7 +156,7 @@
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="QSpinBox" name="minElevationSpinBox">
+          <widget class="QSpinBox" name="midElevationSpinBox">
            <property name="minimumSize">
             <size>
              <width>72</width>
@@ -184,7 +184,7 @@
           </widget>
          </item>
          <item row="1" column="2">
-          <widget class="QSpinBox" name="midElevationSpinBox">
+          <widget class="QSpinBox" name="maxElevationSpinBox">
            <property name="minimumSize">
             <size>
              <width>72</width>
