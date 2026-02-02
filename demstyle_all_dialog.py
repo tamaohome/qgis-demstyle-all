@@ -73,6 +73,7 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.maxElevationSpinBox.lineEdit().setReadOnly(True)
 
         self.refresh_target_layer_list()  # レイヤ一覧を更新
+        self._init_current_feature_table()  # currentFeatureTableWidgetを初期化
 
         # シグナル接続
         self.dataRangeSlider.valueChanged.connect(self.handle_slider_change)
@@ -142,6 +143,7 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.maxElevationSpinBox.blockSignals(False)
 
         self._update_ok_button_state()
+        self._highlight_matching_elevation()
 
     def on_min_elevation_changed(self) -> None:
         self._update_elevation_values("min")
@@ -258,9 +260,8 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.raise_()
         self.activateWindow()
 
-    def _update_current_feature_table(self) -> None:
-        """currentFeatureTableWidgetを更新する"""
-        # テーブルをクリア
+    def _init_current_feature_table(self) -> None:
+        """currentFeatureTableWidgetを初期化する"""
         self.currentFeatureTableWidget.clear()
         self.currentFeatureTableWidget.setRowCount(0)
         self.currentFeatureTableWidget.setColumnCount(3)
@@ -271,6 +272,16 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         # ヘッダを設定
         headers = ["No", "標高下", "標高上"]
         self.currentFeatureTableWidget.setHorizontalHeaderLabels(headers)
+
+        # 列幅を設定
+        self.currentFeatureTableWidget.setColumnWidth(0, 96)
+        self.currentFeatureTableWidget.setColumnWidth(1, 52)
+        self.currentFeatureTableWidget.setColumnWidth(2, 52)
+
+    def _update_current_feature_table(self) -> None:
+        """currentFeatureTableWidgetを更新する"""
+        # テーブルの行を初期化
+        self.currentFeatureTableWidget.setRowCount(0)
 
         # 選択中の地物が存在しない場合は中止
         try:
@@ -294,10 +305,45 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.currentFeatureTableWidget.setItem(0, 1, self._create_numeric_table_item(min_elev))
         self.currentFeatureTableWidget.setItem(0, 2, self._create_numeric_table_item(max_elev))
 
-        # 列幅を設定
-        self.currentFeatureTableWidget.setColumnWidth(0, 96)
-        self.currentFeatureTableWidget.setColumnWidth(1, 52)
-        self.currentFeatureTableWidget.setColumnWidth(2, 52)
+        # 現在の設定標高と一致する場合、ハイライト表示
+        self._highlight_matching_elevation()
+
+    def _highlight_matching_elevation(self) -> None:
+        """現在の設定標高と地物の標高が一致する場合、ハイライト表示する"""
+        # 選択中の地物が存在しない場合は中止
+        try:
+            feature = self._current_feature
+        except Exception:
+            return
+
+        if not feature.isValid():
+            return
+
+        # テーブルに行が存在しない場合は中止
+        if self.currentFeatureTableWidget.rowCount() == 0:
+            return
+
+        # 1行データを取得
+        min_elev = feature.attribute("標高下")
+        max_elev = feature.attribute("標高上")
+
+        # 現在の設定標高と一致する場合、ハイライト表示
+        if min_elev == self.min_elevation and max_elev == self.max_elevation:
+            cyan_color_hex = "#d6f4ff"
+            # 地物テーブルをハイライト
+            self.currentFeatureTableWidget.item(0, 1).setBackground(QColor(cyan_color_hex))
+            self.currentFeatureTableWidget.item(0, 2).setBackground(QColor(cyan_color_hex))
+
+            # スピンボックスをハイライト
+            self.minElevationSpinBox.setStyleSheet(f"QSpinBox {{ background-color: {cyan_color_hex}; }}")
+            self.maxElevationSpinBox.setStyleSheet(f"QSpinBox {{ background-color: {cyan_color_hex}; }}")
+        else:
+            # マッチしていない場合はスタイルをリセット
+            if self.currentFeatureTableWidget.rowCount() > 0:
+                self.currentFeatureTableWidget.item(0, 1).setBackground(QColor(Qt.white))
+                self.currentFeatureTableWidget.item(0, 2).setBackground(QColor(Qt.white))
+            self.minElevationSpinBox.setStyleSheet("")
+            self.maxElevationSpinBox.setStyleSheet("")
 
     def _create_numeric_table_item(self, value) -> QTableWidgetItem:
         """数値セルを作成する（右揃え、無効な値は"-"を表示）"""
