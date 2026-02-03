@@ -72,6 +72,9 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.settings = DialogSettings()
         self.setupUi(self)
 
+        # ウィンドウを常に手前に表示
+        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+
         # ウィンドウタイトルにバージョン情報を追加
         version = get_version()
         self.setWindowTitle(f"DEMスタイル一括設定 (v{version})")
