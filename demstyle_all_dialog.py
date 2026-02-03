@@ -93,7 +93,7 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.maxElevationSpinBox.lineEdit().setReadOnly(True)
 
         self.refresh_target_layer_list()  # レイヤ一覧を更新
-        self._init_current_feature_table()  # currentFeatureTableWidgetを初期化
+        self._init_current_feature_table_widget()  # 地物テーブルを初期化
 
         # シグナル接続
         self.dataRangeSlider.valueChanged.connect(self.handle_slider_change)
@@ -266,8 +266,8 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         # 選択(黄色フィル表示)を解除
         self._current_layer.removeSelection()
 
-        # currentFeatureTableWidgetを更新
-        self._update_current_feature_table()
+        # 地物テーブルを更新
+        self._update_current_feature_table_widget()
 
         # 地物にパン
         self._pan_to_feature()
@@ -290,8 +290,8 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         except (ValueError, TypeError):
             return 0
 
-    def _init_current_feature_table(self) -> None:
-        """currentFeatureTableWidgetを初期化する"""
+    def _init_current_feature_table_widget(self) -> None:
+        """地物テーブルを初期化する"""
         self.currentFeatureTableWidget.clear()
         self.currentFeatureTableWidget.setRowCount(0)
         self.currentFeatureTableWidget.setColumnCount(3)
@@ -308,9 +308,9 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.currentFeatureTableWidget.setColumnWidth(1, 52)
         self.currentFeatureTableWidget.setColumnWidth(2, 52)
 
-    def _update_current_feature_table(self) -> None:
-        """currentFeatureTableWidgetを更新する"""
-        # テーブルの行を初期化
+    def _update_current_feature_table_widget(self) -> None:
+        """地物テーブルを更新する"""
+        # テーブル行を初期化
         self.currentFeatureTableWidget.setRowCount(0)
 
         # 選択中の地物が存在しない場合は中止
