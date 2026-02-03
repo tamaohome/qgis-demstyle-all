@@ -397,7 +397,7 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
 
     def _pan_to_feature(self) -> None:
         """地物の中心にキャンバスをパンする"""
-        # 「自動的に盛土中心にパン」が有効化されていない場合は中止
+        # 「盛土中心にパン」が有効化されていない場合は中止
         if not self.enableAutoPanCheckBox.isChecked():
             return
 
