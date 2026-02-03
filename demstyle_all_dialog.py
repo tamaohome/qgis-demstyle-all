@@ -28,21 +28,19 @@ from __future__ import annotations
 from pathlib import Path
 from typing import override
 
-from qgis.PyQt.QtCore import Qt, QTimer
-from qgis.PyQt.QtGui import QColor
+from qgis.PyQt.QtCore import Qt
 from qgis.core import Qgis
-from qgis.core import QgsPointXY
-from qgis.core import QgsRaster
-from qgis.core import QgsMapLayerType
-from qgis.core import QgsRasterLayer
-from qgis.core import QgsProject
-from qgis.gui import QgsMapToolEmitPoint, QgsRubberBand
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
-from qgis.PyQt.QtWidgets import QListWidgetItem, QTableWidgetItem
 
 from .settings import DialogSettings
 from .style_qml_creator import StyleQmlCreator
+from .ui_manager import UIManager
+from .elevation_manager import ElevationManager
+from .feature_manager import FeatureManager
+from .layer_and_range_manager import LayerAndRangeManager
+from .layer_and_range_manager import DATA_RANGE_VALUES
+from .mouse_release_map_tool import MouseReleaseMapTool
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(str(Path(__file__).parent / "demstyle_all_dialog_base.ui"))
@@ -59,9 +57,6 @@ def get_version():
     except Exception:
         pass
     return "unknown"
-
-
-DATA_RANGE_VALUES = [10, 20, 50, 100, 200, 500]
 
 
 class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
@@ -86,6 +81,12 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self._current_layer = None
         self._current_feature = None
 
+        # マネージャーを初期化
+        self.ui_manager = UIManager(self, iface)
+        self.elevation_manager = ElevationManager(self)
+        self.feature_manager = FeatureManager(self, iface)
+        self.layer_range_manager = LayerAndRangeManager(self, iface)
+
         # 初回起動時のデータレンジ値設定
         self.dataRangeSlider.setValue(2)
         self.dataRangeLineEdit.setText(str(DATA_RANGE_VALUES[2]))
@@ -96,23 +97,60 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.maxElevationSpinBox.lineEdit().setReadOnly(True)
 
         self.refresh_target_layer_list()  # レイヤ一覧を更新
-        self._init_current_feature_table_widget()  # 地物テーブルを初期化
+        self.ui_manager.init_current_feature_table_widget()  # 地物テーブルを初期化
 
         # シグナル接続
-        self.dataRangeSlider.valueChanged.connect(self.handle_slider_change)
+        self.dataRangeSlider.valueChanged.connect(self.layer_range_manager.handle_slider_change)
         self.setElevationButton.clicked.connect(self.start_capture_mode)
-        self.minElevationSpinBox.valueChanged.connect(self.on_min_elevation_changed)
-        self.midElevationSpinBox.valueChanged.connect(self.on_mid_elevation_changed)
-        self.maxElevationSpinBox.valueChanged.connect(self.on_max_elevation_changed)
-        self.map_tool.canvasClicked.connect(self.handle_get_elevation)
+        self.minElevationSpinBox.valueChanged.connect(self.elevation_manager.on_min_elevation_changed)
+        self.midElevationSpinBox.valueChanged.connect(self.elevation_manager.on_mid_elevation_changed)
+        self.maxElevationSpinBox.valueChanged.connect(self.elevation_manager.on_max_elevation_changed)
+        self.map_tool.canvasClicked.connect(self.layer_range_manager.handle_get_elevation)
         self.okButton.clicked.connect(self.on_ok_clicked)
         self.cancelButton.clicked.connect(self.on_cancel_clicked)
         self.searchStringLineEdit.textChanged.connect(self.refresh_target_layer_list)
 
-        self.iface.layerTreeView().currentLayerChanged.connect(self.on_active_layer_changed)
+        self.iface.layerTreeView().currentLayerChanged.connect(self.feature_manager.on_active_layer_changed)
 
         # OKボタンの初期状態を設定
         self._update_ok_button_state()
+
+    def get_current_data_range(self) -> int:
+        """現在のデータレンジを取得する"""
+        return self.layer_range_manager.get_current_data_range()
+
+    def get_current_search_string(self) -> str:
+        """現在の検索文字列を取得する"""
+        return self.layer_range_manager.get_current_search_string()
+
+    def refresh_target_layer_list(self) -> None:
+        """標高設定対象のレイヤ一覧を更新する"""
+        self.layer_range_manager.refresh_target_layer_list()
+
+    def get_target_layers(self):
+        """標高設定対象のレイヤ配列を取得する"""
+        return self.layer_range_manager.get_target_layers()
+
+    @property
+    def min_elevation(self) -> int:
+        return self.minElevationSpinBox.value()
+
+    @property
+    def mid_elevation(self) -> int:
+        return self.midElevationSpinBox.value()
+
+    @property
+    def max_elevation(self) -> int:
+        return self.maxElevationSpinBox.value()
+
+    @property
+    def has_elevation(self) -> bool:
+        """標高がセットされている場合 True を返す"""
+        return any([self.min_elevation, self.mid_elevation, self.max_elevation])
+
+    def _update_ok_button_state(self) -> None:
+        """has_elevation の値に基づいてOKボタンの有効/無効を更新"""
+        self.okButton.setEnabled(self.has_elevation)
 
     @override
     def showEvent(self, event):
@@ -125,57 +163,12 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.okButton.setFocus()
 
         # アクティブレイヤおよび選択中の地物を更新
-        self.on_active_layer_changed()
-        self.on_attribute_selection_changed()
+        self.feature_manager.on_active_layer_changed()
+        self.feature_manager.on_attribute_selection_changed()
 
         # ダイアログを最前面に表示
         self.raise_()
         self.activateWindow()
-
-    def _update_elevation_values(self, source: str) -> None:
-        """標高値を更新する（source: 'min' | 'mid' | 'max'）"""
-        data_range = self.get_current_data_range()
-
-        # 値を計算
-        if source == "min":
-            min_value = self.minElevationSpinBox.value()
-            mid_value = min_value + data_range
-            max_value = mid_value + data_range
-        elif source == "mid":
-            mid_value = self.midElevationSpinBox.value()
-            min_value = mid_value - data_range
-            max_value = mid_value + data_range
-        else:  # source == "max"
-            max_value = self.maxElevationSpinBox.value()
-            mid_value = max_value - data_range
-            min_value = mid_value - data_range
-
-        # 全てのシグナルをブロック
-        self.minElevationSpinBox.blockSignals(True)
-        self.midElevationSpinBox.blockSignals(True)
-        self.maxElevationSpinBox.blockSignals(True)
-
-        # 値を設定
-        self.minElevationSpinBox.setValue(min_value)
-        self.midElevationSpinBox.setValue(mid_value)
-        self.maxElevationSpinBox.setValue(max_value)
-
-        # シグナルのブロックを解除
-        self.minElevationSpinBox.blockSignals(False)
-        self.midElevationSpinBox.blockSignals(False)
-        self.maxElevationSpinBox.blockSignals(False)
-
-        self._update_ok_button_state()
-        self._highlight_matching_elevation()
-
-    def on_min_elevation_changed(self) -> None:
-        self._update_elevation_values("min")
-
-    def on_mid_elevation_changed(self) -> None:
-        self._update_elevation_values("mid")
-
-    def on_max_elevation_changed(self) -> None:
-        self._update_elevation_values("max")
 
     def on_ok_clicked(self):
         """OKボタン押下時の処理"""
@@ -198,7 +191,7 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         # 属性テーブルの標高を書き出す
         max_elev = self.max_elevation
         min_elev = self.min_elevation
-        self.write_attr_elev_table(max_elev, min_elev)
+        self.feature_manager.write_attr_elev_table(max_elev, min_elev)
 
         self.iface.mapCanvas().refreshAllLayers()  # 描画を更新
 
@@ -209,354 +202,15 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
             self.canvas.setMapTool(self.previous_map_tool)
         self.reject()  # ダイアログを閉じる
 
-    def on_active_layer_changed(self):
-        """アクティブレイヤ変更時の処理"""
-        # ウィンドウが非表示の場合は何もしない
-        if not self.isVisible():
-            return
-
-        # 現在選択されているレイヤを取得
-        layer = self.iface.activeLayer()
-        # layer_name = layer.name() if layer else "選択なし"
-
-        # メッセージバーを表示
-        # title = "レイヤ変更"
-        # message = f"現在のレイヤ: {layer_name}"
-        # self.iface.messageBar().clearWidgets()
-        # self.iface.messageBar().pushMessage(title, message, level=Qgis.Info, duration=3)
-
-        # 前のレイヤのシグナルを切断
-        if hasattr(self, "_current_layer") and self._current_layer is not None:
-            self._current_layer.selectionChanged.disconnect(self.on_attribute_selection_changed)
-
-        # 新しいレイヤのシグナルをコネクト
-        self._current_layer = layer
-        if layer is not None:
-            layer.selectionChanged.connect(self.on_attribute_selection_changed)
-
-    def on_attribute_selection_changed(self):
-        """属性テーブルの選択変更時の処理"""
-        # ウィンドウが非表示の場合は中止
-        if not self.isVisible():
-            return
-
-        # アクティブレイヤが存在しない場合は中止
-        if self._current_layer is None:
-            return
-
-        # 選択済み地物を取得
-        selected_ids = self._current_layer.selectedFeatureIds()
-        if not selected_ids:
-            return
-
-        # 最初の選択済み地物を取得
-        feature_id = selected_ids[0]
-
-        # 地物オブジェクトを取得
-        self._current_feature = self._current_layer.getFeature(feature_id)
-        if not self._current_feature.isValid():
-            return
-
-        # "No"列のデータを取得
-        feature_no = self._current_feature.attribute("No")
-
-        # メッセージバーを表示
-        title = "地物選択変更"
-        message = f"レイヤ={self._current_layer.name()}, 地物No={feature_no}"
-        self.iface.messageBar().clearWidgets()
-        self.iface.messageBar().pushMessage(title, message, level=Qgis.Info, duration=3)
-
-        # 選択(黄色フィル表示)を解除
-        self._current_layer.removeSelection()
-
-        # 地物テーブルを更新
-        self._update_current_feature_table_widget()
-
-        # 地物にパン
-        self._pan_to_feature()
-
-        # 地物を強調表示
-        self._highlight_feature()
-
-        # ダイアログを最前面に表示
-        self.raise_()
-        self.activateWindow()
-
-    def _validate_elevation_value(self, value: float) -> int:
-        """標高値を検証し、5の倍数に丸める"""
-        try:
-            validated = round(value / 5) * 5
-            if value % 5 != 0:
-                # 値が5の倍数でない場合、ログに警告を出力
-                pass  # 必要に応じて警告を追加
-            return int(validated)
-        except (ValueError, TypeError):
-            return 0
-
-    def _init_current_feature_table_widget(self) -> None:
-        """地物テーブルを初期化する"""
-        self.currentFeatureTableWidget.clear()
-        self.currentFeatureTableWidget.setRowCount(0)
-        self.currentFeatureTableWidget.setColumnCount(3)
-
-        # 行番号を非表示
-        self.currentFeatureTableWidget.verticalHeader().setVisible(False)
-
-        # ヘッダを設定
-        headers = ["No", "標高下", "標高上"]
-        self.currentFeatureTableWidget.setHorizontalHeaderLabels(headers)
-
-        # 列幅を設定
-        self.currentFeatureTableWidget.setColumnWidth(0, 96)
-        self.currentFeatureTableWidget.setColumnWidth(1, 52)
-        self.currentFeatureTableWidget.setColumnWidth(2, 52)
-
-    def _update_current_feature_table_widget(self) -> None:
-        """地物テーブルを更新する"""
-        # テーブル行を初期化
-        self.currentFeatureTableWidget.setRowCount(0)
-
-        # 選択中の地物が存在しない場合は中止
-        try:
-            feature = self._current_feature
-            assert feature is not None
-        except Exception:
-            return
-
-        if not feature.isValid():
-            return
-
-        # 1行データを取得
-        feature_no = feature.attribute("No")
-        min_elev_raw = feature.attribute("標高下")
-        max_elev_raw = feature.attribute("標高上")
-
-        # 標高値を検証（5の倍数に丸める）
-        min_elev = self._validate_elevation_value(min_elev_raw)
-        max_elev = self._validate_elevation_value(max_elev_raw)
-        mid_elev = self._validate_elevation_value((max_elev + min_elev) / 2)
-
-        # テーブルに1行追加
-        self.currentFeatureTableWidget.insertRow(0)
-
-        # 各セルにデータを設定
-        self.currentFeatureTableWidget.setItem(0, 0, QTableWidgetItem(str(feature_no)))
-        self.currentFeatureTableWidget.setItem(0, 1, self._create_numeric_table_item(min_elev))
-        self.currentFeatureTableWidget.setItem(0, 2, self._create_numeric_table_item(max_elev))
-
-        # enableCurrentFeatureElevCheckBox がチェックされている場合、midElevationSpinBox に値を設定
-        if self.enableCurrentFeatureElevCheckBox.isChecked():
-            self.midElevationSpinBox.setValue(mid_elev)
-
-        # 現在の設定標高と一致する場合、ハイライト表示
-        self._highlight_matching_elevation()
-
-    def _highlight_matching_elevation(self) -> None:
-        """現在の設定標高と地物の標高が一致する場合、ハイライト表示する"""
-        # 選択中の地物が存在しない場合は中止
-        try:
-            feature = self._current_feature
-        except Exception:
-            return
-
-        if not feature.isValid():
-            return
-
-        # テーブルに行が存在しない場合は中止
-        if self.currentFeatureTableWidget.rowCount() == 0:
-            return
-
-        # 1行データを取得
-        min_elev = feature.attribute("標高下")
-        max_elev = feature.attribute("標高上")
-
-        # 現在の設定標高と一致する場合、ハイライト表示
-        if min_elev == self.min_elevation and max_elev == self.max_elevation:
-            cyan_color_hex = "#d6f4ff"
-            # 地物テーブルをハイライト
-            self.currentFeatureTableWidget.item(0, 1).setBackground(QColor(cyan_color_hex))
-            self.currentFeatureTableWidget.item(0, 2).setBackground(QColor(cyan_color_hex))
-
-            # スピンボックスをハイライト
-            self.minElevationSpinBox.setStyleSheet(f"QSpinBox {{ background-color: {cyan_color_hex}; }}")
-            self.maxElevationSpinBox.setStyleSheet(f"QSpinBox {{ background-color: {cyan_color_hex}; }}")
-        else:
-            # マッチしていない場合はスタイルをリセット
-            if self.currentFeatureTableWidget.rowCount() > 0:
-                self.currentFeatureTableWidget.item(0, 1).setBackground(QColor(Qt.white))
-                self.currentFeatureTableWidget.item(0, 2).setBackground(QColor(Qt.white))
-            self.minElevationSpinBox.setStyleSheet("")
-            self.maxElevationSpinBox.setStyleSheet("")
-
-    def _create_numeric_table_item(self, value) -> QTableWidgetItem:
-        """数値セルを作成する（右揃え、無効な値は"-"を表示）"""
-        try:
-            text = str(int(value)) if value is not None else "-"
-        except (ValueError, TypeError):
-            text = "-"
-
-        item = QTableWidgetItem(text)
-        item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        return item
-
-    def _pan_to_feature(self) -> None:
-        """地物の中心にキャンバスをパンする"""
-        # 「盛土中心にパン」が有効化されていない場合は中止
-        if not self.enableAutoPanCheckBox.isChecked():
-            return
-
-        # 選択中の地物が存在しない場合は中止
-        try:
-            feature = self._current_feature
-            assert feature is not None
-        except Exception:
-            return
-
-        geometry = feature.geometry()
-        center_point = geometry.centroid().asPoint()
-        self.canvas.setCenter(center_point)
-        self.canvas.refresh()
-
-    def _highlight_feature(self) -> None:
-        """選択中の地物をハイライト"""
-        # アクティブなレイヤを取得
-        layer = self._current_layer
-        if not layer:
-            return
-
-        # 選択中の地物が存在しない場合は中止
-        try:
-            feature = self._current_feature
-            assert feature is not None
-        except Exception:
-            return
-
-        geometry = feature.geometry()
-
-        highlight_color = QColor(255, 255, 0)  # 黄色
-        rubber_band = QgsRubberBand(self.canvas)
-        rubber_band.setToGeometry(geometry, layer)
-        rubber_band.setStrokeColor(highlight_color)
-        rubber_band.setWidth(3)  # ボーダー幅
-
-        # 一定時間後に削除
-        QTimer.singleShot(200, lambda: self.canvas.scene().removeItem(rubber_band))
-
-    def refresh_target_layer_list(self) -> None:
-        """標高設定対象のレイヤ一覧を更新する"""
-        self.layerListWidget.clear()  # リストを初期化
-
-        # レイヤツリーのルートを取得
-        root = QgsProject.instance().layerTreeRoot()
-        # レイヤリストをツリー順で取得
-        layers = [layer_node.layer() for layer_node in root.findLayers()]
-
-        search_string = self.get_current_search_string()  # 検索文字列を取得
-
-        for layer in layers:
-            # 検索文字列に該当しないレイヤはスキップ
-            if search_string not in layer.name():
-                continue
-
-            # ラスタレイヤではないレイヤはスキップ
-            if layer.type() != QgsMapLayerType.RasterLayer:
-                continue
-
-            item = QListWidgetItem(layer.name())  # 表示用のアイテムを作成
-            item.setData(Qt.UserRole, layer.id())  # 内部処理用にレイヤIDを保持
-            self.layerListWidget.addItem(item)  # リストに追加
-
-    def get_target_layers(self) -> list[QgsRasterLayer]:
-        """標高設定対象のレイヤ配列を取得する"""
-        layers = []
-        for i in range(self.layerListWidget.count()):
-            item = self.layerListWidget.item(i)
-            layer_id = item.data(Qt.UserRole)
-            layer = QgsProject.instance().mapLayer(layer_id)
-            if layer is not None:
-                layers.append(layer)
-        return layers
-
-    def handle_slider_change(self, index) -> None:
-        """スライダーの値（インデックス）変更時の処理"""
-        try:
-            # リストから実数値を取得
-            actual_value = DATA_RANGE_VALUES[index]
-            # LineEditに文字列として反映
-            self.dataRangeLineEdit.setText(str(actual_value))
-            # 最小値／最大値を更新
-            self.on_mid_elevation_changed()
-        except IndexError:
-            pass
-
-    def get_current_data_range(self) -> int:
-        """現在のデータレンジを取得する"""
-        index = self.dataRangeSlider.value()
-        return DATA_RANGE_VALUES[index]
-
-    def get_current_search_string(self) -> str:
-        """現在の検索文字列を取得する"""
-        return self.searchStringLineEdit.text()
-
     def start_capture_mode(self) -> None:
         """地図キャンバス上の標高をマウスクリックで取得するモード"""
         # 選択中の地物をハイライト
-        self._highlight_feature()
+        self.ui_manager.highlight_feature(self._current_feature, self._current_layer)
 
         # 現在の地図ツールを保存
         self.previous_map_tool = self.canvas.mapTool()
 
         self.canvas.setMapTool(self.map_tool)
-
-    def handle_get_elevation(self, point, button) -> None:
-        """標高を取得後の処理"""
-        self.canvas.unsetMapTool(self.map_tool)  # ツールを解除
-
-        # 標高取得後にダイアログを最前面に表示
-        self.raise_()
-        self.activateWindow()
-
-        # 全ターゲットレイヤから標高を取得
-        elevation = self.get_elevation_from_target_layers(point)
-
-        if elevation is None:
-            message = "標高値の取得に失敗しました (1)"
-            QtWidgets.QMessageBox.warning(self, "エラー", message)
-            return
-
-        # 標高中心を5単位で数字丸め
-        mid_elevation = round(elevation / 5) * 5
-
-        # スピンボックスに値をセット
-        self.midElevationSpinBox.setValue(mid_elevation)
-
-        # OKボタンの状態を更新
-        self._update_ok_button_state()
-
-        # マップツールが変更されている場合は元に戻す
-        if self.previous_map_tool is not None:
-            self.canvas.setMapTool(self.previous_map_tool)
-
-    @property
-    def min_elevation(self) -> int:
-        return self.minElevationSpinBox.value()
-
-    @property
-    def mid_elevation(self) -> int:
-        return self.midElevationSpinBox.value()
-
-    @property
-    def max_elevation(self) -> int:
-        return self.maxElevationSpinBox.value()
-
-    @property
-    def has_elevation(self) -> bool:
-        """標高がセットされている場合 True を返す"""
-        return any([self.min_elevation, self.mid_elevation, self.max_elevation])
-
-    def _update_ok_button_state(self) -> None:
-        """has_elevation の値に基づいてOKボタンの有効/無効を更新"""
-        self.okButton.setEnabled(self.has_elevation)
 
     def _save_dialog_state(self) -> None:
         """ダイアログの設定を保存し、マップツールをリセット"""
@@ -598,83 +252,3 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
             event.accept()
         else:
             super().keyPressEvent(event)
-
-    def get_elevation_from_target_layers(self, point: QgsPointXY) -> float | None:
-        """全てのターゲットレイヤから標高を取得する"""
-        # ターゲットレイヤ配列を取得
-        layers = self.get_target_layers()
-
-        for layer in layers:
-            # クリック地点の標高値を取得
-            res = layer.dataProvider().identify(point, QgsRaster.IdentifyFormatValue)
-
-            if not res.isValid():
-                continue
-
-            # 結果は辞書形式 {バンド番号: 値} で返される (通常、DEMは第1バンド)
-            results = res.results()
-            elevation = results.get(1)  # バンド1の値を取得
-
-            if elevation is not None:
-                return elevation
-
-        # 標高値の取得に失敗した場合 None を返す
-        return None
-
-    def write_attr_elev_table(self, max_elev: int, min_elev: int) -> None:
-        """属性テーブルの標高値を書き出す"""
-        # 現在のレイヤを取得
-        try:
-            layer = self._current_layer
-        except Exception:
-            return
-
-        if layer is None:
-            return
-
-        # ベクタレイヤでない場合は中止
-        if layer.type() != QgsMapLayerType.VectorLayer:
-            return
-
-        # 現在選択されている地物を取得
-        try:
-            feature = self._current_feature
-            assert feature is not None
-        except Exception:
-            return
-
-        if not feature.isValid():
-            return
-
-        # フィールド名のインデックスを取得
-        min_field_idx = layer.fields().indexOf("標高下")
-        max_field_idx = layer.fields().indexOf("標高上")
-
-        # フィールドが存在しない場合は中止
-        if min_field_idx == -1 or max_field_idx == -1:
-            return
-
-        # 選択中の地物のみ属性を更新
-        changes = {feature.id(): {min_field_idx: min_elev, max_field_idx: max_elev}}
-        layer.beginEditCommand("標高値を更新")
-        layer.dataProvider().changeAttributeValues(changes)
-        layer.endEditCommand()
-
-
-class MouseReleaseMapTool(QgsMapToolEmitPoint):
-    """マウスリリースにより発火するマップツール"""
-
-    def __init__(self, canvas):
-        super().__init__(canvas)
-
-    def canvasPressEvent(self, event):
-        # マウス押下時の挙動を無効化
-        pass
-
-    def canvasReleaseEvent(self, event):
-        # マウスが離された位置の地図座標を取得
-        point = self.toMapCoordinates(event.pos())
-
-        # 本来クリック時に飛ぶはずの canvasClicked シグナルを
-        # リリースのタイミングで手動で発信（emit）する
-        self.canvasClicked.emit(point, event.button())
