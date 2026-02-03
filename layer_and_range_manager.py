@@ -1,7 +1,8 @@
+from qgis.PyQt.QtCore import Qt
 from qgis.core import QgsMapLayerType, QgsRaster, QgsProject, QgsPointXY
 from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtWidgets import QListWidgetItem
-
+from qgis.core import QgsMapLayer
 
 DATA_RANGE_VALUES = [10, 20, 50, 100, 200, 500]
 
@@ -39,10 +40,8 @@ class LayerAndRangeManager:
             item.setData(Qt.UserRole, layer.id())  # 内部処理用にレイヤIDを保持
             self.dialog.layerListWidget.addItem(item)  # リストに追加
 
-    def get_target_layers(self):
+    def get_target_layers(self) -> list[QgsMapLayer]:
         """標高設定対象のレイヤ配列を取得する"""
-        from qgis.PyQt.QtCore import Qt
-
         layers = []
         for i in range(self.dialog.layerListWidget.count()):
             item = self.dialog.layerListWidget.item(i)

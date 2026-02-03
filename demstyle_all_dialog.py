@@ -30,6 +30,7 @@ from typing import override
 
 from qgis.PyQt.QtCore import Qt
 from qgis.core import Qgis
+from qgis.core import QgsMapLayer
 from qgis.core import QgsVectorLayer
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
@@ -116,7 +117,7 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         """標高設定対象のレイヤ一覧を更新する"""
         self.layer_range_manager.refresh_target_layer_list()
 
-    def get_target_layers(self):
+    def get_target_layers(self) -> list[QgsMapLayer]:
         """標高設定対象のレイヤ配列を取得する"""
         return self.layer_range_manager.get_target_layers()
 
@@ -164,7 +165,19 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
 
     def on_ok_clicked(self):
         """OKボタン押下時の処理"""
+        # スタイルファイルをレイヤに適用
         layers = self.get_target_layers()
+        self._apply_dem_style(layers)
+
+        # 属性テーブルの標高を書き出す
+        max_elev = self.max_elevation
+        min_elev = self.min_elevation
+        self.feature_manager.write_attr_elev_table(max_elev, min_elev)
+
+        self.iface.mapCanvas().refreshAllLayers()  # 描画を更新
+
+    def _apply_dem_style(self, layers: list[QgsMapLayer]) -> None:
+        """スタイルファイルをレイヤに適用"""
         qml_creator = StyleQmlCreator(self.min_elevation, self.max_elevation)
 
         for layer in layers:
@@ -180,13 +193,6 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.iface.messageBar().clearWidgets()
         self.iface.messageBar().pushMessage("info", "DEMスタイルの設定が完了しました", Qgis.Info, duration=3)
 
-        # 属性テーブルの標高を書き出す
-        max_elev = self.max_elevation
-        min_elev = self.min_elevation
-        self.feature_manager.write_attr_elev_table(max_elev, min_elev)
-
-        self.iface.mapCanvas().refreshAllLayers()  # 描画を更新
-
     def on_cancel_clicked(self):
         """キャンセルボタン押下時の処理"""
         # マップツールが変更されている場合は元に戻す
@@ -197,7 +203,7 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
     def start_capture_mode(self) -> None:
         """地図キャンバス上の標高をマウスクリックで取得するモード"""
         # 選択中の地物をハイライト
-        self.ui_manager.highlight_feature(self._current_feature, self.curr)
+        self.ui_manager.highlight_feature(self._current_feature, self.current_layer)
 
         # 現在の地図ツールを保存
         self.previous_map_tool = self.canvas.mapTool()
