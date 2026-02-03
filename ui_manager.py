@@ -48,7 +48,6 @@ class UIManager:
         # 標高値を検証（5の倍数に丸める）
         min_elev = self._validate_elevation_value(min_elev_raw)
         max_elev = self._validate_elevation_value(max_elev_raw)
-        mid_elev = self._validate_elevation_value((max_elev + min_elev) / 2)
 
         # テーブルに1行追加
         self.dialog.currentFeatureTableWidget.insertRow(0)
@@ -57,10 +56,6 @@ class UIManager:
         self.dialog.currentFeatureTableWidget.setItem(0, 0, QTableWidgetItem(str(feature_no)))
         self.dialog.currentFeatureTableWidget.setItem(0, 1, self._create_numeric_table_item(min_elev))
         self.dialog.currentFeatureTableWidget.setItem(0, 2, self._create_numeric_table_item(max_elev))
-
-        # enableCurrentFeatureElevCheckBox がチェックされている場合、midElevationSpinBox に値を設定
-        if self.dialog.enableCurrentFeatureElevCheckBox.isChecked():
-            self.dialog.midElevationSpinBox.setValue(mid_elev)
 
         # 現在の設定標高と一致する場合、ハイライト表示
         self.highlight_matching_elevation(feature)

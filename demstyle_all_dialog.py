@@ -190,8 +190,8 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
             self.iface.layerTreeView().refreshLayerSymbology(layer.id())
 
         # メッセージバーに表示
-        self.iface.messageBar().clearWidgets()
-        self.iface.messageBar().pushMessage("info", "DEMスタイルの設定が完了しました", Qgis.Info, duration=3)
+        message = "DEMスタイルの設定が完了しました"
+        self.iface.messageBar().pushMessage("info", message, Qgis.Info, duration=3)
 
     def on_cancel_clicked(self):
         """キャンセルボタン押下時の処理"""

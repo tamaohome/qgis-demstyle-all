@@ -1,5 +1,8 @@
 from qgis.core import QgsMapLayerType
 from qgis.core import Qgis
+from qgis.core import QgsFeature
+
+from .layer_and_range_manager import DATA_RANGE_VALUES
 
 
 class FeatureManager:
@@ -33,33 +36,58 @@ class FeatureManager:
 
         # 地物オブジェクトを取得
         self.dialog._current_feature = layer.getFeature(feature_id)
-        if not self.dialog._current_feature.isValid():
+        feature = self.dialog._current_feature
+        if not feature.isValid():
             return
 
         # "No"列のデータを取得
-        feature_no = self.dialog._current_feature.attribute("No")
+        feature_no = feature.attribute("No")
 
         # メッセージバーを表示
         title = "地物選択変更"
         message = f"レイヤ={layer.name()}, 地物No={feature_no}"
-        self.iface.messageBar().clearWidgets()
-        self.iface.messageBar().pushMessage(title, message, level=Qgis.Info, duration=3)
+        self.iface.messageBar().pushMessage(title, message, level=Qgis.Info, duration=1)
 
         # 選択(黄色フィル表示)を解除
         layer.removeSelection()
 
+        # 標高設定を更新
+        self.load_elevation_settings(feature)
+
         # 地物テーブルを更新
-        self.dialog.ui_manager.update_current_feature_table_widget(self.dialog._current_feature)
+        self.dialog.ui_manager.update_current_feature_table_widget(feature)
 
         # 地物にパン
         self.pan_to_feature()
 
         # 地物を強調表示
-        self.dialog.ui_manager.highlight_feature(self.dialog._current_feature, layer)
+        self.dialog.ui_manager.highlight_feature(feature, layer)
 
         # ダイアログを最前面に表示
         self.dialog.raise_()
         self.dialog.activateWindow()
+
+    def load_elevation_settings(self, feature: QgsFeature) -> None:
+        """標高設定およびデータレンジを更新"""
+        # チェックボックスで無効化の場合は中止
+        if not self.dialog.enableCurrentFeatureElevCheckBox.isChecked():
+            return
+
+        # 標高を取得 (失敗する場合は中止)
+        try:
+            min_elev = feature.attribute("標高下")
+            max_elev = feature.attribute("標高上")
+            mid_elev = round((min_elev + max_elev) / 2)
+        except Exception:
+            return
+
+        # データレンジを設定
+        data_range = round((max_elev - min_elev) / 2)
+        data_range_idx = DATA_RANGE_VALUES.index(data_range)
+        self.dialog.dataRangeSlider.setValue(data_range_idx)
+
+        # 標高中心を設定
+        self.dialog.midElevationSpinBox.setValue(mid_elev)
 
     def pan_to_feature(self) -> None:
         """地物の中心にキャンバスをパンする"""
