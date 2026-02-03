@@ -60,7 +60,7 @@ class FeatureManager:
 
     def pan_to_feature(self) -> None:
         """地物の中心にキャンバスをパンする"""
-        # 「盛土中心にパン」が有効化されていない場合は中止
+        # 「地物中心にパン」が有効化されていない場合は中止
         if not self.dialog.enableAutoPanCheckBox.isChecked():
             return
 

@@ -35,11 +35,15 @@
       </size>
      </property>
      <property name="title">
-      <string>選択中の盛土</string>
+      <string>選択中の地物</string>
      </property>
      <layout class="QVBoxLayout" name="currentFeatureLayout">
       <item>
-       <widget class="FeatureLayerComboBox" name="featureLayerComboBox"/>
+       <widget class="FeatureLayerComboBox" name="featureLayerComboBox">
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QTableWidget" name="currentFeatureTableWidget">
@@ -97,7 +101,7 @@
       <item>
        <widget class="QCheckBox" name="enableAutoPanCheckBox">
         <property name="text">
-         <string>盛土中心にパン</string>
+         <string>地物中心にパン</string>
         </property>
         <property name="checked">
          <bool>true</bool>
@@ -227,7 +231,7 @@
       <item row="2" column="0" colspan="3">
        <widget class="QCheckBox" name="enableCurrentFeatureElevCheckBox">
         <property name="text">
-         <string>選択中の盛土に合わせる</string>
+         <string>属性テーブルの標高を読み込む</string>
         </property>
         <property name="checked">
          <bool>true</bool>
@@ -279,6 +283,9 @@
           <height>0</height>
          </size>
         </property>
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
         <property name="styleSheet">
          <string notr="true"/>
         </property>
@@ -325,6 +332,9 @@
           <width>80</width>
           <height>16777215</height>
          </size>
+        </property>
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
         </property>
         <property name="text">
          <string notr="true">★</string>
