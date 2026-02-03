@@ -16,12 +16,15 @@ class FeatureManager:
         if not self.dialog.isVisible():
             return
 
-        # アクティブレイヤが存在しない場合は中止
-        if self.dialog.current_layer is None:
+        # 現在のレイヤを取得
+        try:
+            layer = self.dialog.current_layer
+            assert layer is not None
+        except Exception:
             return
 
         # 選択済み地物を取得
-        selected_ids = self.dialog.current_layer.selectedFeatureIds()
+        selected_ids = layer.selectedFeatureIds()
         if not selected_ids:
             return
 
@@ -29,7 +32,7 @@ class FeatureManager:
         feature_id = selected_ids[0]
 
         # 地物オブジェクトを取得
-        self.dialog._current_feature = self.dialog.current_layer.getFeature(feature_id)
+        self.dialog._current_feature = layer.getFeature(feature_id)
         if not self.dialog._current_feature.isValid():
             return
 
@@ -38,12 +41,12 @@ class FeatureManager:
 
         # メッセージバーを表示
         title = "地物選択変更"
-        message = f"レイヤ={self.dialog.current_layer.name()}, 地物No={feature_no}"
+        message = f"レイヤ={layer.name()}, 地物No={feature_no}"
         self.iface.messageBar().clearWidgets()
         self.iface.messageBar().pushMessage(title, message, level=Qgis.Info, duration=3)
 
         # 選択(黄色フィル表示)を解除
-        self.dialog.current_layer.removeSelection()
+        layer.removeSelection()
 
         # 地物テーブルを更新
         self.dialog.ui_manager.update_current_feature_table_widget(self.dialog._current_feature)
@@ -52,7 +55,7 @@ class FeatureManager:
         self.pan_to_feature()
 
         # 地物を強調表示
-        self.dialog.ui_manager.highlight_feature(self.dialog._current_feature, self.dialog.current_layer)
+        self.dialog.ui_manager.highlight_feature(self.dialog._current_feature, layer)
 
         # ダイアログを最前面に表示
         self.dialog.raise_()
@@ -78,10 +81,8 @@ class FeatureManager:
         # 現在のレイヤを取得
         try:
             layer = self.dialog.current_layer
+            assert layer is not None
         except Exception:
-            return
-
-        if layer is None:
             return
 
         # ベクタレイヤでない場合は中止
@@ -106,3 +107,5 @@ class FeatureManager:
         layer.beginEditCommand("標高値を更新")
         layer.dataProvider().changeAttributeValues(changes)
         layer.endEditCommand()
+
+        layer.dataChanged.emit()  # 属性テーブルの表示を更新
