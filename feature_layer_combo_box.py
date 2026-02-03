@@ -1,5 +1,5 @@
 from qgis.PyQt.QtWidgets import QComboBox
-from qgis.core import QgsProject, QgsMapLayerType, QgsWkbTypes
+from qgis.core import QgsProject, QgsMapLayerType, QgsWkbTypes, QgsVectorLayer
 
 from .ui_manager import FEATURE_HEADERS
 
@@ -42,12 +42,16 @@ class FeatureLayerComboBox(QComboBox):
             if index >= 0:
                 self.setCurrentIndex(index)
 
-    def current_layer(self):
+    @property
+    def current_layer(self) -> QgsVectorLayer | None:
         """現在選択されているレイヤオブジェクトを返す"""
-        layer_id = self.currentData()
-        if layer_id:
-            return QgsProject.instance().mapLayer(layer_id)
-        return None
+        try:
+            layer_id = self.currentData()
+            layer = QgsProject.instance().mapLayer(layer_id)
+            assert isinstance(layer, QgsVectorLayer)
+            return layer
+        except Exception:
+            return None
 
     def _has_header(self, layer, header: list[str]) -> bool:
         layer_field_names = [field.name() for field in layer.fields()]

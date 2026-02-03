@@ -10,24 +10,6 @@ class FeatureManager:
         self.iface = iface
         self.canvas = iface.mapCanvas()
 
-    def on_active_layer_changed(self):
-        """アクティブレイヤ変更時の処理"""
-        # ウィンドウが非表示の場合は何もしない
-        if not self.dialog.isVisible():
-            return
-
-        # 現在選択されているレイヤを取得
-        layer = self.iface.activeLayer()
-
-        # 前のレイヤのシグナルを切断
-        if self.dialog._current_layer is not None:
-            self.dialog._current_layer.selectionChanged.disconnect(self.on_attribute_selection_changed)
-
-        # 新しいレイヤのシグナルをコネクト
-        self.dialog._current_layer = layer
-        if layer is not None:
-            layer.selectionChanged.connect(self.on_attribute_selection_changed)
-
     def on_attribute_selection_changed(self):
         """属性テーブルの選択変更時の処理"""
         # ウィンドウが非表示の場合は中止
@@ -35,11 +17,11 @@ class FeatureManager:
             return
 
         # アクティブレイヤが存在しない場合は中止
-        if self.dialog._current_layer is None:
+        if self.dialog.current_layer is None:
             return
 
         # 選択済み地物を取得
-        selected_ids = self.dialog._current_layer.selectedFeatureIds()
+        selected_ids = self.dialog.current_layer.selectedFeatureIds()
         if not selected_ids:
             return
 
@@ -47,7 +29,7 @@ class FeatureManager:
         feature_id = selected_ids[0]
 
         # 地物オブジェクトを取得
-        self.dialog._current_feature = self.dialog._current_layer.getFeature(feature_id)
+        self.dialog._current_feature = self.dialog.current_layer.getFeature(feature_id)
         if not self.dialog._current_feature.isValid():
             return
 
@@ -56,12 +38,12 @@ class FeatureManager:
 
         # メッセージバーを表示
         title = "地物選択変更"
-        message = f"レイヤ={self.dialog._current_layer.name()}, 地物No={feature_no}"
+        message = f"レイヤ={self.dialog.current_layer.name()}, 地物No={feature_no}"
         self.iface.messageBar().clearWidgets()
         self.iface.messageBar().pushMessage(title, message, level=Qgis.Info, duration=3)
 
         # 選択(黄色フィル表示)を解除
-        self.dialog._current_layer.removeSelection()
+        self.dialog.current_layer.removeSelection()
 
         # 地物テーブルを更新
         self.dialog.ui_manager.update_current_feature_table_widget(self.dialog._current_feature)
@@ -70,7 +52,7 @@ class FeatureManager:
         self.pan_to_feature()
 
         # 地物を強調表示
-        self.dialog.ui_manager.highlight_feature(self.dialog._current_feature, self.dialog._current_layer)
+        self.dialog.ui_manager.highlight_feature(self.dialog._current_feature, self.dialog.current_layer)
 
         # ダイアログを最前面に表示
         self.dialog.raise_()
@@ -95,7 +77,7 @@ class FeatureManager:
         """属性テーブルの標高値を書き出す"""
         # 現在のレイヤを取得
         try:
-            layer = self.dialog._current_layer
+            layer = self.dialog.current_layer
         except Exception:
             return
 

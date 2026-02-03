@@ -30,6 +30,7 @@ from typing import override
 
 from qgis.PyQt.QtCore import Qt
 from qgis.core import Qgis
+from qgis.core import QgsVectorLayer
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
 
@@ -66,7 +67,6 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.canvas = self.iface.mapCanvas()
         self.map_tool = MouseReleaseMapTool(self.canvas)
         self.previous_map_tool = None  # 以前の地図ツールを保存
-        self._current_layer = None
         self._current_feature = None
 
         # マネージャーを初期化
@@ -97,6 +97,9 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.okButton.clicked.connect(self.on_ok_clicked)
         self.cancelButton.clicked.connect(self.on_cancel_clicked)
         self.searchStringLineEdit.textChanged.connect(self.refresh_target_layer_list)
+
+        if self.current_layer is not None:
+            self.current_layer.selectionChanged.connect(self.feature_manager.on_attribute_selection_changed)
 
         # OKボタンの初期状態を設定
         self._update_ok_button_state()
@@ -134,6 +137,10 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         """標高がセットされている場合 True を返す"""
         return any([self.min_elevation, self.mid_elevation, self.max_elevation])
 
+    @property
+    def current_layer(self) -> QgsVectorLayer | None:
+        return self.featureLayerComboBox.current_layer
+
     def _update_ok_button_state(self) -> None:
         """has_elevation の値に基づいてOKボタンの有効/無効を更新"""
         self.okButton.setEnabled(self.has_elevation)
@@ -149,7 +156,6 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.okButton.setFocus()
 
         # アクティブレイヤおよび選択中の地物を更新
-        self.feature_manager.on_active_layer_changed()
         self.feature_manager.on_attribute_selection_changed()
 
         # ダイアログを最前面に表示
@@ -191,7 +197,7 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
     def start_capture_mode(self) -> None:
         """地図キャンバス上の標高をマウスクリックで取得するモード"""
         # 選択中の地物をハイライト
-        self.ui_manager.highlight_feature(self._current_feature, self._current_layer)
+        self.ui_manager.highlight_feature(self._current_feature, self.curr)
 
         # 現在の地図ツールを保存
         self.previous_map_tool = self.canvas.mapTool()
