@@ -198,7 +198,6 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.write_attr_elev_table(max_elev, min_elev)
 
         self.iface.mapCanvas().refreshAllLayers()  # 描画を更新
-        self.accept()  # ダイアログを閉じる
 
     def on_cancel_clicked(self):
         """キャンセルボタン押下時の処理"""
