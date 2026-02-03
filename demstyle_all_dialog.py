@@ -98,8 +98,6 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         self.cancelButton.clicked.connect(self.on_cancel_clicked)
         self.searchStringLineEdit.textChanged.connect(self.refresh_target_layer_list)
 
-        self.iface.layerTreeView().currentLayerChanged.connect(self.feature_manager.on_active_layer_changed)
-
         # OKボタンの初期状態を設定
         self._update_ok_button_state()
 

@@ -3,6 +3,8 @@ from qgis.PyQt.QtGui import QColor
 from qgis.gui import QgsRubberBand
 from qgis.PyQt.QtWidgets import QTableWidgetItem
 
+FEATURE_HEADERS = ["No", "標高下", "標高上"]
+
 
 class UIManager:
     """UI関連処理の管理クラス"""
@@ -22,8 +24,7 @@ class UIManager:
         self.dialog.currentFeatureTableWidget.verticalHeader().setVisible(False)
 
         # ヘッダを設定
-        headers = ["No", "標高下", "標高上"]
-        self.dialog.currentFeatureTableWidget.setHorizontalHeaderLabels(headers)
+        self.dialog.currentFeatureTableWidget.setHorizontalHeaderLabels(FEATURE_HEADERS)
 
         # 列幅を設定
         self.dialog.currentFeatureTableWidget.setColumnWidth(0, 96)

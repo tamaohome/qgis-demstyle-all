@@ -20,7 +20,7 @@ class FeatureManager:
         layer = self.iface.activeLayer()
 
         # 前のレイヤのシグナルを切断
-        if hasattr(self.dialog, "_current_layer") and self.dialog._current_layer is not None:
+        if self.dialog._current_layer is not None:
             self.dialog._current_layer.selectionChanged.disconnect(self.on_attribute_selection_changed)
 
         # 新しいレイヤのシグナルをコネクト
