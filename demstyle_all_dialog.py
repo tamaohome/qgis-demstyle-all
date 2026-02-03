@@ -41,22 +41,10 @@ from .feature_manager import FeatureManager
 from .layer_and_range_manager import LayerAndRangeManager
 from .layer_and_range_manager import DATA_RANGE_VALUES
 from .mouse_release_map_tool import MouseReleaseMapTool
+from .utils import get_version
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(str(Path(__file__).parent / "demstyle_all_dialog_base.ui"))
-
-
-def get_version():
-    """メタデータファイルからバージョンを取得"""
-    metadata_file = Path(__file__).parent / "metadata.txt"
-    try:
-        with open(metadata_file, "r", encoding="utf-8") as f:
-            for line in f:
-                if line.startswith("version="):
-                    return line.split("=", 1)[1].strip()
-    except Exception:
-        pass
-    return "unknown"
 
 
 class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
