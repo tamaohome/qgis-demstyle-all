@@ -79,9 +79,12 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         version = get_version()
         self.setWindowTitle(f"DEMスタイル一括設定 (v{version})")
 
+        # インスタンス変数を初期化
         self.canvas = self.iface.mapCanvas()
         self.map_tool = MouseReleaseMapTool(self.canvas)
         self.previous_map_tool = None  # 以前の地図ツールを保存
+        self._current_layer = None
+        self._current_feature = None
 
         # 初回起動時のデータレンジ値設定
         self.dataRangeSlider.setValue(2)
@@ -316,6 +319,7 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         # 選択中の地物が存在しない場合は中止
         try:
             feature = self._current_feature
+            assert feature is not None
         except Exception:
             return
 
@@ -404,6 +408,7 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         # 選択中の地物が存在しない場合は中止
         try:
             feature = self._current_feature
+            assert feature is not None
         except Exception:
             return
 
@@ -422,6 +427,7 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         # 選択中の地物が存在しない場合は中止
         try:
             feature = self._current_feature
+            assert feature is not None
         except Exception:
             return
 
@@ -633,6 +639,7 @@ class DEMStyleAllDialog(QtWidgets.QDialog, FORM_CLASS):
         # 現在選択されている地物を取得
         try:
             feature = self._current_feature
+            assert feature is not None
         except Exception:
             return
 
