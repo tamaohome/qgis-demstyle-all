@@ -119,6 +119,9 @@
      <property name="title">
       <string>標高設定</string>
      </property>
+     <property name="toolTip">
+      <string>Sキーで減少、Wキーで増加</string>
+     </property>
      <layout class="QGridLayout" name="elevationValueLayout">
       <item row="1" column="2">
        <widget class="QSpinBox" name="maxElevationSpinBox">
@@ -131,7 +134,7 @@
         <property name="font">
          <font>
           <family>ＭＳ ゴシック</family>
-          <pointsize>12</pointsize>
+          <pointsize>10</pointsize>
          </font>
         </property>
         <property name="alignment">
@@ -159,7 +162,7 @@
         <property name="font">
          <font>
           <family>ＭＳ ゴシック</family>
-          <pointsize>12</pointsize>
+          <pointsize>10</pointsize>
          </font>
         </property>
         <property name="frame">
@@ -207,7 +210,7 @@
         <property name="font">
          <font>
           <family>ＭＳ ゴシック</family>
-          <pointsize>12</pointsize>
+          <pointsize>10</pointsize>
          </font>
         </property>
         <property name="alignment">
@@ -410,7 +413,7 @@
         <property name="font">
          <font>
           <family>ＭＳ ゴシック</family>
-          <pointsize>12</pointsize>
+          <pointsize>10</pointsize>
          </font>
         </property>
         <property name="text">
