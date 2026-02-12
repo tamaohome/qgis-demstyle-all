@@ -34,8 +34,6 @@ class LayerAndRangeManager:
             if layer.type() != QgsMapLayerType.RasterLayer:
                 continue
 
-            from qgis.PyQt.QtCore import Qt
-
             item = QListWidgetItem(layer.name())  # 表示用のアイテムを作成
             item.setData(Qt.UserRole, layer.id())  # 内部処理用にレイヤIDを保持
             self.dialog.layerListWidget.addItem(item)  # リストに追加
