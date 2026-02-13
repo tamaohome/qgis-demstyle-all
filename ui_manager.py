@@ -69,9 +69,20 @@ class UIManager:
         if self.dialog.currentFeatureTableWidget.rowCount() == 0:
             return
 
-        # 1行データを取得
-        min_elev = feature.attribute("標高下")
-        max_elev = feature.attribute("標高上")
+        # 1行データを取得（検証して5の倍数に揃える）
+        min_elev_raw = feature.attribute("標高下")
+        max_elev_raw = feature.attribute("標高上")
+        min_elev = self._validate_elevation_value(min_elev_raw)
+        max_elev = self._validate_elevation_value(max_elev_raw)
+
+        # 属性がいずれも 0 (null相当) の場合は灰色表示
+        if min_elev == 0 and max_elev == 0:
+            gray_color = QColor(Qt.lightGray)
+            self.dialog.currentFeatureTableWidget.item(0, 1).setBackground(gray_color)
+            self.dialog.currentFeatureTableWidget.item(0, 2).setBackground(gray_color)
+            self.dialog.minElevationSpinBox.setStyleSheet("")
+            self.dialog.maxElevationSpinBox.setStyleSheet("")
+            return
 
         # 現在の設定標高と一致する場合、ハイライト表示
         if min_elev == self.dialog.min_elevation and max_elev == self.dialog.max_elevation:
@@ -87,13 +98,14 @@ class UIManager:
             self.dialog.maxElevationSpinBox.setStyleSheet(
                 f"QSpinBox {{ background-color: {cyan_color_hex}; }}"
             )
-        else:
-            # マッチしていない場合はスタイルをリセット
-            if self.dialog.currentFeatureTableWidget.rowCount() > 0:
-                self.dialog.currentFeatureTableWidget.item(0, 1).setBackground(QColor(Qt.white))
-                self.dialog.currentFeatureTableWidget.item(0, 2).setBackground(QColor(Qt.white))
-            self.dialog.minElevationSpinBox.setStyleSheet("")
-            self.dialog.maxElevationSpinBox.setStyleSheet("")
+            return
+
+        # マッチしていない場合はスタイルをリセット
+        if self.dialog.currentFeatureTableWidget.rowCount() > 0:
+            self.dialog.currentFeatureTableWidget.item(0, 1).setBackground(QColor(Qt.white))
+            self.dialog.currentFeatureTableWidget.item(0, 2).setBackground(QColor(Qt.white))
+        self.dialog.minElevationSpinBox.setStyleSheet("")
+        self.dialog.maxElevationSpinBox.setStyleSheet("")
 
     def highlight_feature(self, feature, layer) -> None:
         """選択中の地物をハイライト"""
