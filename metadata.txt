@@ -6,7 +6,7 @@
 name=DEMスタイル一括設定
 qgisMinimumVersion=3.0
 description=
-version=0.2
+version=0.2.1
 author=
 email=
 
