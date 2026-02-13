@@ -106,6 +106,10 @@ class FeatureManager:
 
     def write_attr_elev_table(self, max_elev: int, min_elev: int) -> None:
         """属性テーブルの標高値を書き出す"""
+        # 属性テーブル書き換えを有効化 がOFFの場合は中止
+        if not self.dialog.enableAttrTableUpdateCheckBox.isChecked():
+            return
+
         # 現在のレイヤを取得
         try:
             layer = self.dialog.current_layer
