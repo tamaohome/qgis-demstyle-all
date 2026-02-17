@@ -1,6 +1,6 @@
 from PyQt5.QtCore import Qt
 from base_qgis_dialog import BaseQgisDialog
-from qgis.core import Qgis, QgsMapLayerType, QgsMessageLog, QgsRaster, QgsProject, QgsPointXY
+from qgis.core import QgsMapLayerType, QgsRaster, QgsPointXY
 from PyQt5.QtWidgets import QListWidgetItem
 from qgis.core import QgsMapLayer
 
@@ -12,7 +12,6 @@ class LayerAndRangeManager:
 
     def __init__(self, dialog: BaseQgisDialog):
         self.dialog = dialog
-        self.iface = iface
 
     def refresh_target_layer_list(self) -> None:
         """標高設定対象のレイヤ一覧を更新する"""
@@ -25,11 +24,15 @@ class LayerAndRangeManager:
         search_string = self.get_current_search_string()  # 検索文字列を取得
 
         for layer in layers:
+            # レイヤの存在判定
+            if not layer:
+                continue
+
             # 検索文字列に該当しないレイヤはスキップ
             if search_string not in layer.name():
                 continue
 
-            # ラスタレイヤではないレイヤはスキップ
+            # ラスタレイヤ判定
             if layer.type() != QgsMapLayerType.RasterLayer:
                 continue
 
@@ -43,7 +46,7 @@ class LayerAndRangeManager:
         for i in range(self.dialog.layerListWidget.count()):
             item = self.dialog.layerListWidget.item(i)
             layer_id = item.data(Qt.UserRole)
-            layer = QgsProject.instance().mapLayer(layer_id)
+            layer = self.dialog.project.mapLayer(layer_id)
             if layer is not None:
                 layers.append(layer)
         return layers
@@ -76,8 +79,11 @@ class LayerAndRangeManager:
 
         for layer in layers:
             # クリック地点の標高値を取得
-            res = layer.dataProvider().identify(point, QgsRaster.IdentifyFormatValue)
+            provider = layer.dataProvider()
+            if not provider:
+                continue
 
+            res = provider.identify(point, QgsRaster.IdentifyFormatValue)
             if not res.isValid():
                 continue
 

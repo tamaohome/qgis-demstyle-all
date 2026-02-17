@@ -3,12 +3,12 @@ from __future__ import annotations
 from pathlib import Path
 from typing import override
 
-from qgis.PyQt.QtCore import Qt
+from PyQt5.QtCore import Qt
 from qgis.core import Qgis
 from qgis.core import QgsMapLayer
 from qgis.core import QgsVectorLayer
 from qgis.PyQt import uic
-from qgis.PyQt import QtWidgets
+from qgis.gui import QgisInterface
 
 from .base_qgis_dialog import BaseQgisDialog
 from .settings import DialogSettings
@@ -38,7 +38,6 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         self.setWindowTitle(f"DEMスタイル一括設定 (v{version})")
 
         # インスタンス変数を初期化
-        self.canvas = self.iface.mapCanvas()
         self.map_tool = MouseReleaseMapTool(self.canvas)
         self.previous_map_tool = None  # 以前の地図ツールを保存
         self._current_feature = None
@@ -47,7 +46,7 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         self.ui_manager = UIManager(self, iface)
         self.elevation_manager = ElevationManager(self)
         self.feature_manager = FeatureManager(self, iface)
-        self.layer_range_manager = LayerAndRangeManager(self, iface)
+        self.layer_range_manager = LayerAndRangeManager(self)
 
         # 初回起動時のデータレンジ値設定
         self.dataRangeSlider.setValue(2)
@@ -155,8 +154,13 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         qml_creator = StyleQmlCreator(self.min_elevation, self.max_elevation)
 
         for layer in layers:
+            # レイヤーのデータソースのディレクトリパスを取得
+            provider = layer.dataProvider()
+            if not provider:
+                continue
+
             # スタイルファイル (*.qml) を生成
-            base_dir = Path(layer.dataProvider().dataSourceUri()).parent
+            base_dir = Path(provider.dataSourceUri()).parent
             qml_filepath = qml_creator.create_style_qml_file(base_dir)
 
             # スタイルファイル (*.qml) をレイヤに適用

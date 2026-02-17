@@ -46,7 +46,7 @@ class FeatureManager:
         # メッセージバーを表示
         title = "地物選択変更"
         message = f"レイヤ={layer.name()}, 地物No={feature_no}"
-        self.iface.messageBar().pushMessage(title, message, level=Qgis.Info, duration=1)
+        self.iface.messageBar().pushMessage(title, message, level=Qgis.MessageLevel.Info, duration=1)
 
         # 選択(黄色フィル表示)を解除
         layer.removeSelection()

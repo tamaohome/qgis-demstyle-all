@@ -1,5 +1,5 @@
-from qgis.PyQt.QtWidgets import QComboBox
-from qgis.core import QgsProject, QgsMapLayerType, QgsWkbTypes, QgsVectorLayer
+from PyQt5.QtWidgets import QComboBox
+from qgis.core import Qgis, QgsMessageLog, QgsProject, QgsVectorLayer
 
 from .ui_manager import FEATURE_HEADERS
 
@@ -16,21 +16,34 @@ class FeatureLayerComboBox(QComboBox):
 
         self.clear()
 
-        root = QgsProject.instance().layerTreeRoot()
+        # インスタンスを取得
+        ins = QgsProject.instance()
+        if not ins:
+            return
+
+        root = ins.layerTreeRoot()
+        if not root:
+            message = "レイヤツリーの取得に失敗しました。"
+            QgsMessageLog.logMessage(message, "demstyle_all", Qgis.MessageLevel.Critical)
+            return
         ordered_nodes = root.findLayers()
 
         for node in ordered_nodes:
             layer = node.layer()
 
-            # 除外判定
+            # レイヤの存在判定
             if not layer:
                 continue
-            if layer.type() != QgsMapLayerType.VectorLayer:
+
+            # ベクタレイヤ判定
+            if not isinstance(layer, QgsVectorLayer):
                 continue
+
+            # 地物の存在判定
             if not layer.featureCount():
                 continue
-            if layer.geometryType() != QgsWkbTypes.PolygonGeometry:
-                continue
+
+            # 属性テーブルのヘッダー名判定
             if not self._has_header(layer, FEATURE_HEADERS):
                 continue
 
@@ -44,10 +57,13 @@ class FeatureLayerComboBox(QComboBox):
 
     @property
     def current_layer(self) -> QgsVectorLayer | None:
-        """現在選択されているレイヤオブジェクトを返す"""
+        """現在選択中のレイヤオブジェクトを返す"""
         try:
             layer_id = self.currentData()
-            layer = QgsProject.instance().mapLayer(layer_id)
+            project = QgsProject.instance()
+            if not project:
+                return None
+            layer = project.mapLayer(layer_id)
             assert isinstance(layer, QgsVectorLayer)
             return layer
         except Exception:

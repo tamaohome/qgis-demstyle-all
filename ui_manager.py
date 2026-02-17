@@ -1,7 +1,8 @@
-from qgis.PyQt.QtCore import Qt, QTimer
-from qgis.PyQt.QtGui import QColor
+from PyQt5.QtWidgets import QTableWidgetItem
+from PyQt5.QtGui import QColor
+from PyQt5.QtCore import Qt
 from qgis.gui import QgsRubberBand
-from qgis.PyQt.QtWidgets import QTableWidgetItem
+from PyQt5.QtCore import QTimer
 
 FEATURE_HEADERS = ["No", "標高下", "標高上"]
 

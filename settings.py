@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from qgis.PyQt.QtCore import QSettings, QSize
-from qgis.PyQt import QtWidgets
+from PyQt5.QtCore import QSettings, QSize
+from PyQt5.QtWidgets import QDialog
 
 INI_FILENAME = "demstyle_all/demstyle_all.ini"
 DEFAULT_WINDOW_SIZE = QSize(320, 400)
@@ -19,12 +19,12 @@ class DialogSettings(QSettings):
         # 親クラス QSettings の初期化（INI形式を指定）
         super().__init__(settings_path, QSettings.Format.IniFormat)
 
-    def save_dialog_state(self, dialog: QtWidgets.QDialog) -> None:
+    def save_dialog_state(self, dialog: QDialog) -> None:
         """ダイアログの配置を保存する"""
         self.setValue("dialog/geometry", dialog.saveGeometry())
         self.sync()  # INIファイルに保存
 
-    def restore_dialog_state(self, dialog: QtWidgets.QDialog) -> None:
+    def restore_dialog_state(self, dialog: QDialog) -> None:
         """ダイアログの配置を復元する"""
         geometry = self.value("dialog/geometry")
         if geometry:
