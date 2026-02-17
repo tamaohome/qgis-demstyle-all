@@ -1,7 +1,7 @@
-from qgis.PyQt.QtCore import Qt
-from qgis.core import QgsMapLayerType, QgsRaster, QgsProject, QgsPointXY
-from qgis.PyQt import QtWidgets
-from qgis.PyQt.QtWidgets import QListWidgetItem
+from PyQt5.QtCore import Qt
+from base_qgis_dialog import BaseQgisDialog
+from qgis.core import Qgis, QgsMapLayerType, QgsMessageLog, QgsRaster, QgsProject, QgsPointXY
+from PyQt5.QtWidgets import QListWidgetItem
 from qgis.core import QgsMapLayer
 
 DATA_RANGE_VALUES = [10, 20, 50, 100, 200, 500]
@@ -10,7 +10,7 @@ DATA_RANGE_VALUES = [10, 20, 50, 100, 200, 500]
 class LayerAndRangeManager:
     """レイヤ・データレンジ関連処理の管理クラス"""
 
-    def __init__(self, dialog, iface):
+    def __init__(self, dialog: BaseQgisDialog):
         self.dialog = dialog
         self.iface = iface
 
@@ -18,9 +18,8 @@ class LayerAndRangeManager:
         """標高設定対象のレイヤ一覧を更新する"""
         self.dialog.layerListWidget.clear()  # リストを初期化
 
-        # レイヤツリーのルートを取得
-        root = QgsProject.instance().layerTreeRoot()
         # レイヤリストをツリー順で取得
+        root = self.dialog.layer_tree_root
         layers = [layer_node.layer() for layer_node in root.findLayers()]
 
         search_string = self.get_current_search_string()  # 検索文字列を取得
@@ -105,7 +104,7 @@ class LayerAndRangeManager:
 
         if elevation is None:
             message = "標高値の取得に失敗しました (1)"
-            QtWidgets.QMessageBox.warning(self.dialog, "エラー", message)
+            self.dialog.message_bar.warning(self.dialog, "エラー", message)
             return
 
         # 標高中心を5単位で数字丸め
