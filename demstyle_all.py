@@ -34,6 +34,8 @@ class DEMStyleAll:
         # Must be set in initGui() to survive plugin reloads
         self.first_start = None
 
+        self.dlg = None
+
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
@@ -150,6 +152,9 @@ class DEMStyleAll:
         if self.first_start:
             self.first_start = False
             self.dlg = DEMStyleAllDialog(self.iface)
+
+        if not self.dlg:
+            return
 
         # show the dialog
         self.dlg.show()
