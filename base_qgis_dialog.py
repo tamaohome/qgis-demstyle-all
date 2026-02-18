@@ -46,7 +46,7 @@ class BaseQgisDialog(QDialog):
     @property
     def layer_tree_root(self) -> QgsLayerTree:
         """QGISレイヤツリー ルートノード"""
-        root = self.iface.layerTreeRoot()
+        root = self.project.layerTreeRoot()
         if root is None:
             raise RuntimeError("レイヤツリーのルートノードを取得できません。")
         return root
