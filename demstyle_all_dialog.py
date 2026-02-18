@@ -8,7 +8,7 @@ from qgis.core import Qgis
 from qgis.core import QgsMapLayer
 from qgis.core import QgsVectorLayer
 from qgis.PyQt import uic
-from qgis.gui import QgisInterface
+from qgis.gui import QgisInterface, QgsMapTool
 
 from .base_qgis_dialog import BaseQgisDialog
 from .settings import DialogSettings
@@ -40,7 +40,7 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
 
         # インスタンス変数を初期化
         self.map_tool = MouseReleaseMapTool(self.canvas)
-        self.previous_map_tool = None  # 以前の地図ツールを保存
+        self.previous_map_tool: QgsMapTool | None = None  # 以前の地図ツールを保存
 
         # マネージャーを初期化
         self.ui_manager = UIManager(self, iface)
