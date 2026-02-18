@@ -42,12 +42,12 @@ class FeatureManager:
             return
 
         # "No"列のデータを取得
-        feature_no = feature.attribute("No")
+        # feature_no = feature.attribute("No")
 
         # メッセージバーを表示
-        title = "地物選択変更"
-        message = f"レイヤ={layer.name()}, 地物No={feature_no}"
-        self.iface.messageBar().pushMessage(title, message, level=Qgis.MessageLevel.Info, duration=1)
+        # title = "地物選択変更"
+        # message = f"レイヤ={layer.name()}, 地物No={feature_no}"
+        # self.dialog.message_bar.pushMessage(title, message, level=Qgis.MessageLevel.Info, duration=1)
 
         # 選択(黄色フィル表示)を解除
         layer.removeSelection()
@@ -103,7 +103,40 @@ class FeatureManager:
             return
 
         geometry = self.dialog.current_feature.geometry()
-        center_point = geometry.centroid().asPoint()
+
+        # ジオメトリがnullまたは空の場合は中止
+        if geometry.isNull() or geometry.isEmpty():
+            title = "警告"
+            message = f"地物のジオメトリが無効です（ID={self.dialog.current_feature.id()}）"
+            self.dialog.message_bar.pushMessage(title, message, level=Qgis.MessageLevel.Warning, duration=3)
+            return
+
+        # 地物中心を計算
+        centroid = geometry.centroid()
+        if centroid.isNull() or centroid.isEmpty():
+            title = "警告"
+            message = f"地物中心の計算に失敗しました（ID={self.dialog.current_feature.id()}）"
+            self.dialog.message_bar.pushMessage(title, message, level=Qgis.MessageLevel.Warning, duration=3)
+            return
+
+        center_point = centroid.asPoint()
+
+        # 座標が(0, 0)かつジオメトリも無効の場合は中止
+        if center_point.x() == 0 and center_point.y() == 0:
+            bbox = geometry.boundingBox()
+            if bbox.isNull() or (
+                bbox.xMinimum() == 0
+                and bbox.yMinimum() == 0
+                and bbox.xMaximum() == 0
+                and bbox.yMaximum() == 0
+            ):
+                title = "警告"
+                message = f"地物の座標が無効です（0,0）（ID={self.dialog.current_feature.id()}）"
+                self.dialog.message_bar.pushMessage(
+                    title, message, level=Qgis.MessageLevel.Warning, duration=3
+                )
+                return
+
         self.canvas.setCenter(center_point)
         self.canvas.refresh()
 

@@ -71,12 +71,7 @@ class BaseQgisDialog(QDialog):
     @property
     def current_feature(self) -> QgsFeature | None:
         """現在選択中のフィーチャ（属性テーブルのレコード）"""
-        layer = self.current_layer
-        if not isinstance(layer, QgsVectorLayer):
-            return None
-
-        selected = layer.selectedFeatures()
-        return selected[0] if selected else None
+        return self._current_feature
 
     @current_feature.setter
     def current_feature(self, feature: QgsFeature) -> None:
