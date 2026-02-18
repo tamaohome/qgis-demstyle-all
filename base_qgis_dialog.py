@@ -1,11 +1,10 @@
 from PyQt5.QtWidgets import QDialog
 from qgis.core import QgsLayerTree, QgsProject
-from abc import ABC
 
 from qgis.gui import QgisInterface, QgsLayerTreeView, QgsMapCanvas, QgsMessageBar
 
 
-class BaseQgisDialog(QDialog, ABC):
+class BaseQgisDialog(QDialog):
     """QGISプラグイン共通のダイアログベースクラス"""
 
     def __init__(self, iface: QgisInterface, parent=None):
