@@ -27,6 +27,7 @@ FORM_CLASS, _ = uic.loadUiType(str(Path(__file__).parent / "demstyle_all_dialog_
 
 class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
     def __init__(self, iface: QgisInterface):
+        super().__init__(iface)
         self.settings = DialogSettings()
         self.setupUi(self)
 
