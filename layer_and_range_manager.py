@@ -1,6 +1,6 @@
 from PyQt5.QtCore import Qt
 from .base_qgis_dialog import BaseQgisDialog
-from qgis.core import QgsMapLayerType, QgsRaster, QgsPointXY
+from qgis.core import Qgis, QgsMapLayerType, QgsRaster, QgsPointXY
 from PyQt5.QtWidgets import QListWidgetItem
 from qgis.core import QgsMapLayer
 
@@ -109,8 +109,9 @@ class LayerAndRangeManager:
         elevation = self.get_elevation_from_target_layers(point)
 
         if elevation is None:
-            message = "標高値の取得に失敗しました (1)"
-            self.dialog.message_bar.warning(self.dialog, "エラー", message)
+            title = "警告"
+            message = "標高値の取得に失敗しました"
+            self.dialog.message_bar.pushMessage(title, message, level=Qgis.MessageLevel.Warning, duration=3)
             return
 
         # 標高中心を5単位で数字丸め
