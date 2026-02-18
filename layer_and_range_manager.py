@@ -70,7 +70,7 @@ class LayerAndRangeManager:
 
     def get_current_search_string(self) -> str:
         """現在の検索文字列を取得する"""
-        return self.dialog.searchStringLineEdit.text()
+        return self.dialog.search_string
 
     def get_elevation_from_target_layers(self, point: QgsPointXY) -> float | None:
         """全てのターゲットレイヤから標高を取得する"""

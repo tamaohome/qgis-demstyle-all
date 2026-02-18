@@ -19,6 +19,7 @@ from .feature_manager import FeatureManager
 from .layer_and_range_manager import LayerAndRangeManager
 from .layer_and_range_manager import DATA_RANGE_VALUES
 from .mouse_release_map_tool import MouseReleaseMapTool
+from .search_string_dialog import SearchStringDialog
 from .utils import get_version
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
@@ -41,6 +42,7 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         # インスタンス変数を初期化
         self.map_tool = MouseReleaseMapTool(self.canvas)
         self.previous_map_tool: QgsMapTool | None = None  # 以前の地図ツールを保存
+        self.search_string: str = "DEM"  # 検索文字列
 
         # マネージャーを初期化
         self.ui_manager = UIManager(self, iface)
@@ -69,7 +71,7 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         self.map_tool.canvasClicked.connect(self.layer_range_manager.handle_get_elevation)
         self.okButton.clicked.connect(self.on_ok_clicked)
         self.cancelButton.clicked.connect(self.on_cancel_clicked)
-        self.searchStringLineEdit.textChanged.connect(self.on_search_string_changed)
+        self.searchStringRenameButton.clicked.connect(self.on_search_string_rename_button_clicked)
 
         if self.current_layer is not None:
             self.current_layer.selectionChanged.connect(self.feature_manager.on_attribute_selection_changed)
@@ -83,7 +85,7 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
 
     def get_current_search_string(self) -> str:
         """現在の検索文字列を取得する"""
-        return self.layer_range_manager.get_current_search_string()
+        return self.search_string
 
     def refresh_target_layer_list(self) -> None:
         """標高設定対象のレイヤ一覧を更新する"""
@@ -128,7 +130,8 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         # 検索文字列を復元
         search_string = self.settings.restore_search_string()
         if search_string:
-            self.searchStringLineEdit.setText(search_string)
+            self.search_string = search_string
+        self.update_search_string_label()
 
         # OKボタンへフォーカスを設定
         self.okButton.setFocus()
@@ -183,9 +186,17 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
             self.canvas.setMapTool(self.previous_map_tool)
         self.reject()  # ダイアログを閉じる
 
-    def on_search_string_changed(self) -> None:
-        """検索文字列が変更された時の処理"""
-        self.refresh_target_layer_list()
+    def on_search_string_rename_button_clicked(self) -> None:
+        """検索文字列の変更ボタン押下時の処理"""
+        dialog = SearchStringDialog(self, self.search_string)
+        if dialog.exec() == SearchStringDialog.Accepted:
+            self.search_string = dialog.get_search_string()
+            self.update_search_string_label()
+            self.refresh_target_layer_list()
+
+    def update_search_string_label(self) -> None:
+        """検索文字列ラベルを更新"""
+        self.searchStringLabel.setText("検索文字列：" + self.search_string)
 
     def start_capture_mode(self) -> None:
         """地図キャンバス上の標高をマウスクリックで取得するモード"""
@@ -200,8 +211,7 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
     def _save_dialog_state(self) -> None:
         """ダイアログの設定を保存し、マップツールをリセット"""
         # 検索文字列を保存
-        search_string = self.searchStringLineEdit.text()
-        self.settings.save_search_string(search_string)
+        self.settings.save_search_string(self.search_string)
 
         # マップツールが変更されている場合は元に戻す
         if self.previous_map_tool is not None:
