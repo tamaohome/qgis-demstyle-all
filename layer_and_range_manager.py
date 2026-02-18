@@ -1,5 +1,5 @@
 from PyQt5.QtCore import Qt
-from base_qgis_dialog import BaseQgisDialog
+from .base_qgis_dialog import BaseQgisDialog
 from qgis.core import QgsMapLayerType, QgsRaster, QgsPointXY
 from PyQt5.QtWidgets import QListWidgetItem
 from qgis.core import QgsMapLayer
