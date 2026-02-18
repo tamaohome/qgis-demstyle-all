@@ -69,7 +69,7 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         self.map_tool.canvasClicked.connect(self.layer_range_manager.handle_get_elevation)
         self.okButton.clicked.connect(self.on_ok_clicked)
         self.cancelButton.clicked.connect(self.on_cancel_clicked)
-        self.searchStringLineEdit.textChanged.connect(self.refresh_target_layer_list)
+        self.searchStringLineEdit.textChanged.connect(self.on_search_string_changed)
 
         if self.current_layer is not None:
             self.current_layer.selectionChanged.connect(self.feature_manager.on_attribute_selection_changed)
@@ -125,6 +125,11 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         # ダイアログ設定を復元
         self.settings.restore_dialog_state(self)
 
+        # 検索文字列を復元
+        search_string = self.settings.restore_search_string()
+        if search_string:
+            self.searchStringLineEdit.setText(search_string)
+
         # OKボタンへフォーカスを設定
         self.okButton.setFocus()
 
@@ -171,12 +176,16 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         message = "DEMスタイルの設定が完了しました"
         self.message_bar.pushMessage("info", message, Qgis.MessageLevel.Info, duration=3)
 
-    def on_cancel_clicked(self):
+    def on_cancel_clicked(self) -> None:
         """キャンセルボタン押下時の処理"""
         # マップツールが変更されている場合は元に戻す
         if self.previous_map_tool is not None:
             self.canvas.setMapTool(self.previous_map_tool)
         self.reject()  # ダイアログを閉じる
+
+    def on_search_string_changed(self) -> None:
+        """検索文字列が変更された時の処理"""
+        self.refresh_target_layer_list()
 
     def start_capture_mode(self) -> None:
         """地図キャンバス上の標高をマウスクリックで取得するモード"""
@@ -190,6 +199,10 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
 
     def _save_dialog_state(self) -> None:
         """ダイアログの設定を保存し、マップツールをリセット"""
+        # 検索文字列を保存
+        search_string = self.searchStringLineEdit.text()
+        self.settings.save_search_string(search_string)
+
         # マップツールが変更されている場合は元に戻す
         if self.previous_map_tool is not None:
             self.canvas.setMapTool(self.previous_map_tool)

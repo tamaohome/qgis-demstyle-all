@@ -32,3 +32,12 @@ class DialogSettings(QSettings):
         else:
             # デフォルトサイズを使用
             dialog.resize(DEFAULT_WINDOW_SIZE)
+
+    def save_search_string(self, search_string: str) -> None:
+        """検索文字列を保存する"""
+        self.setValue("layer/search_string", search_string)
+        self.sync()  # INIファイルに保存
+
+    def restore_search_string(self) -> str:
+        """検索文字列を復元する"""
+        return self.value("search/string", "DEM")  # デフォルトは "DEM"
