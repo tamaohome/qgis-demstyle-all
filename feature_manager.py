@@ -140,7 +140,10 @@ class FeatureManager:
         # 選択中の地物のみ属性を更新
         changes = {feature.id(): {min_field_idx: min_elev, max_field_idx: max_elev}}
         layer.beginEditCommand("標高値を更新")
-        layer.dataProvider().changeAttributeValues(changes)
+        provider = layer.dataProvider()
+        if not provider:
+            return
+        provider.changeAttributeValues(changes)
         layer.endEditCommand()
 
         layer.dataChanged.emit()  # 属性テーブルの表示を更新
