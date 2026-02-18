@@ -1,3 +1,4 @@
+from .base_qgis_dialog import BaseQgisDialog
 from qgis.core import QgsMapLayerType
 from qgis.core import Qgis
 from qgis.core import QgsFeature
@@ -8,7 +9,7 @@ from .layer_and_range_manager import DATA_RANGE_VALUES
 class FeatureManager:
     """地物関連処理の管理クラス"""
 
-    def __init__(self, dialog, iface):
+    def __init__(self, dialog: BaseQgisDialog, iface):
         self.dialog = dialog
         self.iface = iface
         self.canvas = iface.mapCanvas()
@@ -20,10 +21,8 @@ class FeatureManager:
             return
 
         # 現在のレイヤを取得
-        try:
-            layer = self.dialog.current_layer
-            assert layer is not None
-        except Exception:
+        layer = self.dialog.current_layer
+        if not layer:
             return
 
         # 選択済み地物を取得
@@ -35,8 +34,10 @@ class FeatureManager:
         feature_id = selected_ids[0]
 
         # 地物オブジェクトを取得
-        self.dialog._current_feature = layer.getFeature(feature_id)
-        feature = self.dialog._current_feature
+        self.dialog.current_feature = layer.getFeature(feature_id)
+        feature = self.dialog.current_feature
+        if not feature:
+            return
         if not feature.isValid():
             return
 
@@ -96,10 +97,12 @@ class FeatureManager:
             return
 
         # 選択中の地物が存在しない場合は中止
-        if not self.dialog._current_feature or not self.dialog._current_feature.isValid():
+        if not self.dialog.current_feature:
+            return
+        if not self.dialog.current_feature.isValid():
             return
 
-        geometry = self.dialog._current_feature.geometry()
+        geometry = self.dialog.current_feature.geometry()
         center_point = geometry.centroid().asPoint()
         self.canvas.setCenter(center_point)
         self.canvas.refresh()
@@ -111,10 +114,8 @@ class FeatureManager:
             return
 
         # 現在のレイヤを取得
-        try:
-            layer = self.dialog.current_layer
-            assert layer is not None
-        except Exception:
+        layer = self.dialog.current_layer
+        if not layer:
             return
 
         # ベクタレイヤでない場合は中止
@@ -122,8 +123,10 @@ class FeatureManager:
             return
 
         # 現在選択されている地物を取得
-        feature = self.dialog._current_feature
-        if not feature or not feature.isValid():
+        feature = self.dialog.current_feature
+        if not feature:
+            return
+        if not feature.isValid():
             return
 
         # フィールド名のインデックスを取得
@@ -137,7 +140,10 @@ class FeatureManager:
         # 選択中の地物のみ属性を更新
         changes = {feature.id(): {min_field_idx: min_elev, max_field_idx: max_elev}}
         layer.beginEditCommand("標高値を更新")
-        layer.dataProvider().changeAttributeValues(changes)
+        provider = layer.dataProvider()
+        if not provider:
+            return
+        provider.changeAttributeValues(changes)
         layer.endEditCommand()
 
         layer.dataChanged.emit()  # 属性テーブルの表示を更新

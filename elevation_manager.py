@@ -38,8 +38,8 @@ class ElevationManager:
         self.dialog.maxElevationSpinBox.blockSignals(False)
 
         self.dialog._update_ok_button_state()
-        if self.dialog._current_feature:
-            self.dialog.ui_manager.highlight_matching_elevation(self.dialog._current_feature)
+        if self.dialog.current_feature:
+            self.dialog.ui_manager.highlight_matching_elevation(self.dialog.current_feature)
 
     def on_min_elevation_changed(self) -> None:
         self.update_elevation_values("min")
