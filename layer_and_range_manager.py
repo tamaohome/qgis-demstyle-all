@@ -51,7 +51,7 @@ class LayerAndRangeManager:
                 layers.append(layer)
         return layers
 
-    def handle_slider_change(self, index) -> None:
+    def handle_slider_change(self, index: int) -> None:
         """スライダーの値（インデックス）変更時の処理"""
         try:
             # リストから実数値を取得
@@ -97,7 +97,7 @@ class LayerAndRangeManager:
         # 標高値の取得に失敗した場合 None を返す
         return None
 
-    def handle_get_elevation(self, point, button) -> None:
+    def handle_get_elevation(self, point: QgsPointXY, button: int) -> None:
         """標高を取得後の処理"""
         self.dialog.canvas.unsetMapTool(self.dialog.map_tool)  # ツールを解除
 

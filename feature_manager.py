@@ -1,3 +1,4 @@
+from .base_qgis_dialog import BaseQgisDialog
 from qgis.core import QgsMapLayerType
 from qgis.core import Qgis
 from qgis.core import QgsFeature
@@ -8,7 +9,7 @@ from .layer_and_range_manager import DATA_RANGE_VALUES
 class FeatureManager:
     """地物関連処理の管理クラス"""
 
-    def __init__(self, dialog, iface):
+    def __init__(self, dialog: BaseQgisDialog, iface):
         self.dialog = dialog
         self.iface = iface
         self.canvas = iface.mapCanvas()
