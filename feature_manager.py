@@ -20,10 +20,8 @@ class FeatureManager:
             return
 
         # 現在のレイヤを取得
-        try:
-            layer = self.dialog.current_layer
-            assert layer is not None
-        except Exception:
+        layer = self.dialog.current_layer
+        if not layer:
             return
 
         # 選択済み地物を取得
@@ -35,8 +33,10 @@ class FeatureManager:
         feature_id = selected_ids[0]
 
         # 地物オブジェクトを取得
-        self.dialog._current_feature = layer.getFeature(feature_id)
-        feature = self.dialog._current_feature
+        self.dialog.current_feature = layer.getFeature(feature_id)
+        feature = self.dialog.current_feature
+        if not feature:
+            return
         if not feature.isValid():
             return
 
@@ -96,10 +96,12 @@ class FeatureManager:
             return
 
         # 選択中の地物が存在しない場合は中止
-        if not self.dialog._current_feature or not self.dialog._current_feature.isValid():
+        if not self.dialog.current_feature:
+            return
+        if not self.dialog.current_feature.isValid():
             return
 
-        geometry = self.dialog._current_feature.geometry()
+        geometry = self.dialog.current_feature.geometry()
         center_point = geometry.centroid().asPoint()
         self.canvas.setCenter(center_point)
         self.canvas.refresh()
@@ -111,10 +113,8 @@ class FeatureManager:
             return
 
         # 現在のレイヤを取得
-        try:
-            layer = self.dialog.current_layer
-            assert layer is not None
-        except Exception:
+        layer = self.dialog.current_layer
+        if not layer:
             return
 
         # ベクタレイヤでない場合は中止
@@ -122,8 +122,10 @@ class FeatureManager:
             return
 
         # 現在選択されている地物を取得
-        feature = self.dialog._current_feature
-        if not feature or not feature.isValid():
+        feature = self.dialog.current_feature
+        if not feature:
+            return
+        if not feature.isValid():
             return
 
         # フィールド名のインデックスを取得

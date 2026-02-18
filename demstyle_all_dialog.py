@@ -41,7 +41,6 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         # インスタンス変数を初期化
         self.map_tool = MouseReleaseMapTool(self.canvas)
         self.previous_map_tool = None  # 以前の地図ツールを保存
-        self._current_feature = None
 
         # マネージャーを初期化
         self.ui_manager = UIManager(self, iface)
@@ -182,7 +181,7 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
     def start_capture_mode(self) -> None:
         """地図キャンバス上の標高をマウスクリックで取得するモード"""
         # 選択中の地物をハイライト
-        self.ui_manager.highlight_feature(self._current_feature, self.current_layer)
+        self.ui_manager.highlight_feature(self.current_feature, self.current_layer)
 
         # 現在の地図ツールを保存
         self.previous_map_tool = self.canvas.mapTool()

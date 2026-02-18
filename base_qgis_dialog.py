@@ -1,6 +1,5 @@
 from PyQt5.QtWidgets import QDialog
-from qgis.core import QgsLayerTree, QgsProject
-
+from qgis.core import QgsFeature, QgsLayerTree, QgsMapLayer, QgsProject, QgsVectorLayer
 from qgis.gui import QgisInterface, QgsLayerTreeView, QgsMapCanvas, QgsMessageBar
 
 
@@ -10,6 +9,7 @@ class BaseQgisDialog(QDialog):
     def __init__(self, iface: QgisInterface, parent=None):
         super().__init__(parent)
         self._iface = iface
+        self._current_feature: QgsFeature | None = None
 
     @property
     def project(self) -> QgsProject:
@@ -55,3 +55,29 @@ class BaseQgisDialog(QDialog):
     def iface(self) -> QgisInterface:
         """QGISインターフェース"""
         return self._iface
+
+    @property
+    def current_layer(self) -> QgsMapLayer | None:
+        """現在選択中のレイヤ"""
+        return self.iface.activeLayer()
+
+    @property
+    def current_vector_layer(self) -> QgsVectorLayer | None:
+        """現在選択中のベクタレイヤ"""
+        if not isinstance(self.current_layer, QgsVectorLayer):
+            return None
+        return self.current_layer
+
+    @property
+    def current_feature(self) -> QgsFeature | None:
+        """現在選択中のフィーチャ（属性テーブルのレコード）"""
+        layer = self.current_layer
+        if not isinstance(layer, QgsVectorLayer):
+            return None
+
+        selected = layer.selectedFeatures()
+        return selected[0] if selected else None
+
+    @current_feature.setter
+    def current_feature(self, feature: QgsFeature) -> None:
+        self._current_feature = feature
