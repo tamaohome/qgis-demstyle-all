@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>270</width>
-    <height>566</height>
+    <width>240</width>
+    <height>580</height>
    </rect>
   </property>
   <property name="font">
@@ -136,8 +136,14 @@
        <widget class="QSpinBox" name="maxElevationSpinBox">
         <property name="minimumSize">
          <size>
-          <width>72</width>
+          <width>0</width>
           <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>72</width>
+          <height>16777215</height>
          </size>
         </property>
         <property name="font">
@@ -164,8 +170,14 @@
        <widget class="QSpinBox" name="minElevationSpinBox">
         <property name="minimumSize">
          <size>
-          <width>72</width>
+          <width>0</width>
           <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>72</width>
+          <height>16777215</height>
          </size>
         </property>
         <property name="font">
@@ -212,8 +224,14 @@
        <widget class="QSpinBox" name="midElevationSpinBox">
         <property name="minimumSize">
          <size>
-          <width>72</width>
+          <width>0</width>
           <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>72</width>
+          <height>16777215</height>
          </size>
         </property>
         <property name="font">
@@ -269,6 +287,72 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
+       <widget class="QWidget" name="layerSettingsSearchStringsWidget" native="true">
+        <layout class="QHBoxLayout" name="searchStringHorizontalLayout">
+         <property name="spacing">
+          <number>8</number>
+         </property>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="searchStringLabel">
+           <property name="text">
+            <string>検索文字列：</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="searchStringHorizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="searchStringRenameButton">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>60</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>MS UI Gothic</family>
+             <pointsize>9</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>変更...</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
        <widget class="QListWidget" name="layerListWidget">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -297,51 +381,6 @@
         <property name="sizeAdjustPolicy">
          <enum>QAbstractScrollArea::AdjustToContents</enum>
         </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QWidget" name="layerSettingsSearchStringsWidget" native="true">
-        <layout class="QHBoxLayout" name="searchStringHorizontalLayout">
-         <item>
-          <widget class="QLabel" name="searchStringLabel">
-           <property name="text">
-            <string>検索文字列：</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="searchStringRenameButton">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="font">
-            <font>
-             <family>MS UI Gothic</family>
-             <pointsize>9</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string>変更...</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="searchStringHorizontalSpacer">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-        </layout>
        </widget>
       </item>
      </layout>
@@ -461,8 +500,14 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>48</width>
-          <height>60</height>
+          <width>64</width>
+          <height>56</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>64</width>
+          <height>56</height>
          </size>
         </property>
         <property name="text">
@@ -497,8 +542,14 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>48</width>
-          <height>60</height>
+          <width>64</width>
+          <height>56</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>64</width>
+          <height>56</height>
          </size>
         </property>
         <property name="text">
@@ -519,8 +570,14 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>48</width>
-          <height>60</height>
+          <width>64</width>
+          <height>56</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>64</width>
+          <height>56</height>
          </size>
         </property>
         <property name="text">
