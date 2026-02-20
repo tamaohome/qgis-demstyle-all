@@ -1,4 +1,4 @@
-from .base_qgis_dialog import BaseQgisDialog
+from ..ui.base_qgis_dialog import BaseQgisDialog
 from qgis.core import QgsMapLayerType
 from qgis.core import Qgis
 from qgis.core import QgsFeature

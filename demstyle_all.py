@@ -6,7 +6,7 @@ from qgis.PyQt.QtWidgets import QAction
 from .resources import *  # noqa: F403
 
 # Import the code for the dialog
-from .demstyle_all_dialog import DEMStyleAllDialog
+from .ui.demstyle_all_dialog import DEMStyleAllDialog
 import os.path
 
 

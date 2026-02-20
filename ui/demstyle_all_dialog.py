@@ -10,17 +10,17 @@ from qgis.core import QgsVectorLayer
 from qgis.PyQt import uic
 from qgis.gui import QgisInterface, QgsMapTool
 
-from .base_qgis_dialog import BaseQgisDialog
-from .settings import DialogSettings
-from .style_qml_creator import StyleQmlCreator
-from .ui_manager import UIManager
-from .elevation_manager import ElevationManager
-from .feature_manager import FeatureManager
-from .layer_and_range_manager import LayerAndRangeManager
-from .layer_and_range_manager import DATA_RANGE_VALUES
-from .mouse_release_map_tool import MouseReleaseMapTool
-from .search_string_dialog import SearchStringDialog
-from .utils import get_version
+from ..ui.base_qgis_dialog import BaseQgisDialog
+from ..ui.settings import DialogSettings
+from ..core.style_qml_creator import StyleQmlCreator
+from ..managers.ui_manager import UIManager
+from ..managers.elevation_manager import ElevationManager
+from ..managers.feature_manager import FeatureManager
+from ..managers.layer_and_range_manager import LayerAndRangeManager
+from ..managers.layer_and_range_manager import DATA_RANGE_VALUES
+from ..ui.mouse_release_map_tool import MouseReleaseMapTool
+from ..ui.search_string_dialog import SearchStringDialog
+from ..utils import get_version
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(str(Path(__file__).parent / "demstyle_all_dialog_base.ui"))

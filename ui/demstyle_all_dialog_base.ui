@@ -597,7 +597,7 @@
   <customwidget>
    <class>FeatureLayerComboBox</class>
    <extends>QComboBox</extends>
-   <header>demstyle_all.feature_layer_combo_box</header>
+   <header>demstyle_all.ui.feature_layer_combo_box</header>
   </customwidget>
  </customwidgets>
  <resources/>
