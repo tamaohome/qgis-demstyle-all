@@ -28,9 +28,12 @@ _TINTS = [
 # ベースqmlファイルのパス
 _BASE_STYLE_FILEPATH = Path(__file__).parent / "base_style.qml"
 
+# 出力するqmlファイル名
+_STYLE_FILENAME = "style.qml"
+
 
 class StyleQmlCreator:
-    """スタイルファイル (*.qml) 生成クラス"""
+    """スタイルファイル (style.qml) 生成クラス"""
 
     def __init__(self, min_elevation: int, max_elevation: int, pitch=20):
         self.min_elevation = min_elevation
@@ -42,7 +45,7 @@ class StyleQmlCreator:
         assert isinstance(base_dir, Path)
         assert base_dir.is_dir()
 
-        qml_filepath = base_dir / f"{self.min_elevation}_{self.max_elevation}.qml"
+        qml_filepath = base_dir / _STYLE_FILENAME
         with qml_filepath.open(mode="w") as f:
             f.writelines(self.style_qml_lines)
 
