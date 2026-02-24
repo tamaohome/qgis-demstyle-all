@@ -5,7 +5,7 @@ from pathlib import Path
 from PyQt5.QtCore import QSettings, QSize
 from PyQt5.QtWidgets import QDialog
 
-INI_FILENAME = "demstyle_all/demstyle_all.ini"
+INI_FILENAME = "demstyle_all.ini"
 DEFAULT_WINDOW_SIZE = QSize(320, 400)
 
 
