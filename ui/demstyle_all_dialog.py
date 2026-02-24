@@ -16,8 +16,8 @@ from ..core.style_qml_creator import StyleQmlCreator
 from ..managers.ui_manager import UIManager
 from ..managers.elevation_manager import ElevationManager
 from ..managers.feature_manager import FeatureManager
-from ..managers.layer_and_range_manager import LayerAndRangeManager
-from ..managers.layer_and_range_manager import DATA_RANGE_VALUES
+from ..managers.dem_layer_and_range_manager import DEMLayerAndRangeManager
+from ..managers.dem_layer_and_range_manager import DATA_RANGE_VALUES
 from ..ui.mouse_release_map_tool import MouseReleaseMapTool
 from ..ui.search_string_dialog import SearchStringDialog
 from ..utils import get_version
@@ -48,7 +48,7 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         self.ui_manager = UIManager(self, iface)
         self.elevation_manager = ElevationManager(self)
         self.feature_manager = FeatureManager(self, iface)
-        self.layer_range_manager = LayerAndRangeManager(self)
+        self.dem_layer_range_manager = DEMLayerAndRangeManager(self)
 
         # 初回起動時のデータレンジ値設定
         self.dataRangeSlider.setValue(2)
@@ -63,12 +63,12 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         self.ui_manager.init_current_feature_table_widget()  # 地物テーブルを初期化
 
         # シグナル接続
-        self.dataRangeSlider.valueChanged.connect(self.layer_range_manager.handle_slider_change)
+        self.dataRangeSlider.valueChanged.connect(self.dem_layer_range_manager.handle_slider_change)
         self.setElevationButton.clicked.connect(self.start_capture_mode)
         self.minElevationSpinBox.valueChanged.connect(self.elevation_manager.on_min_elevation_changed)
         self.midElevationSpinBox.valueChanged.connect(self.elevation_manager.on_mid_elevation_changed)
         self.maxElevationSpinBox.valueChanged.connect(self.elevation_manager.on_max_elevation_changed)
-        self.map_tool.canvasClicked.connect(self.layer_range_manager.handle_get_elevation)
+        self.map_tool.canvasClicked.connect(self.dem_layer_range_manager.handle_get_elevation)
         self.okButton.clicked.connect(self.on_ok_clicked)
         self.cancelButton.clicked.connect(self.on_cancel_clicked)
         self.searchStringRenameButton.clicked.connect(self.on_search_string_rename_button_clicked)
@@ -81,7 +81,7 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
 
     def get_current_data_range(self) -> int:
         """現在のデータレンジを取得する"""
-        return self.layer_range_manager.get_current_data_range()
+        return self.dem_layer_range_manager.get_current_data_range()
 
     def get_current_search_string(self) -> str:
         """現在の検索文字列を取得する"""
@@ -89,11 +89,11 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
 
     def refresh_target_layer_list(self) -> None:
         """標高設定対象のレイヤ一覧を更新する"""
-        self.layer_range_manager.refresh_target_layer_list()
+        self.dem_layer_range_manager.refresh_target_layer_list()
 
     def get_target_layers(self) -> list[QgsMapLayer]:
         """標高設定対象のレイヤ配列を取得する"""
-        return self.layer_range_manager.get_target_layers()
+        return self.dem_layer_range_manager.get_target_layers()
 
     @property
     def min_elevation(self) -> int:

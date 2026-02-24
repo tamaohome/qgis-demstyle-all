@@ -7,8 +7,8 @@ from qgis.core import QgsMapLayer
 DATA_RANGE_VALUES = [10, 20, 50, 100, 200, 500]
 
 
-class LayerAndRangeManager:
-    """レイヤ・データレンジ関連処理の管理クラス"""
+class DEMLayerAndRangeManager:
+    """標高レイヤおよびデータレンジ関連処理の管理クラス"""
 
     def __init__(self, dialog: BaseQgisDialog):
         self.dialog = dialog

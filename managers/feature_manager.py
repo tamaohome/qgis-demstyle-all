@@ -5,7 +5,7 @@ from qgis.core import QgsFeature
 from qgis.core import QgsCoordinateTransform
 from qgis.core import QgsProject
 
-from .layer_and_range_manager import DATA_RANGE_VALUES
+from .dem_layer_and_range_manager import DATA_RANGE_VALUES
 
 
 class FeatureManager:
