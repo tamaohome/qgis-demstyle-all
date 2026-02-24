@@ -35,7 +35,7 @@ class DialogSettings(QSettings):
 
     def save_search_string(self, search_string: str) -> None:
         """検索文字列を保存する"""
-        self.setValue("layer/search_string", search_string)
+        self.setValue("search/string", search_string)
         self.sync()  # INIファイルに保存
 
     def restore_search_string(self) -> str:

@@ -42,7 +42,7 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         # インスタンス変数を初期化
         self.map_tool = MouseReleaseMapTool(self.canvas)
         self.previous_map_tool: QgsMapTool | None = None  # 以前の地図ツールを保存
-        self.search_string: str = "DEM"  # 検索文字列
+        self.search_string = self.settings.restore_search_string()  # 検索文字列
 
         # マネージャーを初期化
         self.ui_manager = UIManager(self, iface)
@@ -191,6 +191,7 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         dialog = SearchStringDialog(self, self.search_string)
         if dialog.exec() == SearchStringDialog.Accepted:
             self.search_string = dialog.get_search_string()
+            self.settings.save_search_string(self.search_string)
             self.update_search_string_label()
             self.refresh_target_layer_list()
 
@@ -210,9 +211,6 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
 
     def _save_dialog_state(self) -> None:
         """ダイアログの設定を保存し、マップツールをリセット"""
-        # 検索文字列を保存
-        self.settings.save_search_string(self.search_string)
-
         # マップツールが変更されている場合は元に戻す
         if self.previous_map_tool is not None:
             self.canvas.setMapTool(self.previous_map_tool)
