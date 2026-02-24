@@ -1,7 +1,9 @@
 from ..ui.base_qgis_dialog import BaseQgisDialog
-from qgis.core import QgsMapLayerType
+from qgis.core import QgsGeometry, QgsMapLayerType
 from qgis.core import Qgis
 from qgis.core import QgsFeature
+from qgis.core import QgsCoordinateTransform
+from qgis.core import QgsProject
 
 from .layer_and_range_manager import DATA_RANGE_VALUES
 
@@ -121,6 +123,9 @@ class FeatureManager:
 
         center_point = centroid.asPoint()
 
+        # キャンバスのCRSに座標を変換
+        center_point = self._transform_to_canvas_crs(center_point)
+
         # 座標が(0, 0)かつジオメトリも無効の場合は中止
         if center_point.x() == 0 and center_point.y() == 0:
             bbox = geometry.boundingBox()
@@ -180,3 +185,14 @@ class FeatureManager:
         layer.endEditCommand()
 
         layer.dataChanged.emit()  # 属性テーブルの表示を更新
+
+    def _transform_to_canvas_crs(self, point: QgsGeometry) -> QgsGeometry:
+        """レイヤーのCRSからキャンバスのCRSに座標を変換"""
+        layer = self.dialog.current_layer
+        if not layer or layer.crs() == self.canvas.mapSettings().destinationCrs():
+            return point
+
+        transform = QgsCoordinateTransform(
+            layer.crs(), self.canvas.mapSettings().destinationCrs(), QgsProject.instance()
+        )
+        return transform.transform(point)
