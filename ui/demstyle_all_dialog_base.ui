@@ -38,7 +38,7 @@
       </size>
      </property>
      <property name="title">
-      <string>選択中の地物</string>
+      <string>選択中のレイヤおよび地物</string>
      </property>
      <layout class="QVBoxLayout" name="currentFeatureLayout">
       <item>
@@ -374,7 +374,7 @@
       <string>Aキーで減少、Dキーで増加</string>
      </property>
      <property name="title">
-      <string>変化量</string>
+      <string>カラーランプの変化量</string>
      </property>
      <layout class="QHBoxLayout" name="dataRangeLayout">
       <property name="spacing">
