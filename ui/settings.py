@@ -41,3 +41,25 @@ class DialogSettings(QSettings):
     def restore_search_string(self) -> str:
         """検索文字列を復元する"""
         return self.value("search/string", "DEM")  # デフォルトは "DEM"
+
+    def restore_checkbox_states(self) -> tuple[bool, bool, bool]:
+        """チェックボックスの状態を復元する"""
+        enable_attr_table_update = self.value("checkboxes/enableAttrTableUpdate", True, type=bool)
+        enable_auto_pan = self.value("checkboxes/enableAutoPan", True, type=bool)
+        enable_current_feature_elev = self.value("checkboxes/enableCurrentFeatureElev", True, type=bool)
+        return enable_attr_table_update, enable_auto_pan, enable_current_feature_elev
+
+    def save_enable_attr_table_update(self, checked: bool) -> None:
+        """チェックボックスの状態を保存する (属性テーブル更新)"""
+        self.setValue("checkboxes/enableAttrTableUpdate", checked)
+        self.sync()
+
+    def save_enable_auto_pan(self, checked: bool) -> None:
+        """チェックボックスの状態を保存する (地物中心にパン)"""
+        self.setValue("checkboxes/enableAutoPan", checked)
+        self.sync()
+
+    def save_enable_current_feature_elev(self, checked: bool) -> None:
+        """チェックボックスの状態を保存する (属性テーブルの標高を読み込む)"""
+        self.setValue("checkboxes/enableCurrentFeatureElev", checked)
+        self.sync()

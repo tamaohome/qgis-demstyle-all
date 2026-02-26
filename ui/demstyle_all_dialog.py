@@ -73,6 +73,17 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         self.cancelButton.clicked.connect(self.on_cancel_clicked)
         self.searchStringRenameButton.clicked.connect(self.on_search_string_rename_button_clicked)
 
+        # チェックボックスのシグナル接続（状態変更時にINIファイルに保存）
+        self.enableAttrTableUpdateCheckBox.stateChanged.connect(
+            lambda checked: self.settings.save_enable_attr_table_update(checked == Qt.CheckState.Checked)
+        )
+        self.enableAutoPanCheckBox.stateChanged.connect(
+            lambda checked: self.settings.save_enable_auto_pan(checked == Qt.CheckState.Checked)
+        )
+        self.enableCurrentFeatureElevCheckBox.stateChanged.connect(
+            lambda checked: self.settings.save_enable_current_feature_elev(checked == Qt.CheckState.Checked)
+        )
+
         if self.current_layer is not None:
             self.current_layer.selectionChanged.connect(self.feature_manager.on_attribute_selection_changed)
 
@@ -132,6 +143,16 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         if search_string:
             self.search_string = search_string
         self.update_search_string_label()
+
+        # チェックボックス状態を復元
+        (
+            enable_attr_table_update,
+            enable_auto_pan,
+            enable_current_feature_elev,
+        ) = self.settings.restore_checkbox_states()
+        self.enableAttrTableUpdateCheckBox.setChecked(enable_attr_table_update)
+        self.enableAutoPanCheckBox.setChecked(enable_auto_pan)
+        self.enableCurrentFeatureElevCheckBox.setChecked(enable_current_feature_elev)
 
         # OKボタンへフォーカスを設定
         self.okButton.setFocus()
