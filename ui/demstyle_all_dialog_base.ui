@@ -38,7 +38,7 @@
       </size>
      </property>
      <property name="title">
-      <string>選択中のレイヤおよび地物</string>
+      <string>地物レイヤ</string>
      </property>
      <layout class="QVBoxLayout" name="currentFeatureLayout">
       <item>
@@ -129,7 +129,7 @@
       <string>Sキーで減少、Wキーで増加</string>
      </property>
      <property name="title">
-      <string>標高設定</string>
+      <string>適用する標高</string>
      </property>
      <layout class="QGridLayout" name="elevationValueLayout">
       <item row="0" column="0">
@@ -262,7 +262,7 @@
       </sizepolicy>
      </property>
      <property name="title">
-      <string>レイヤ設定</string>
+      <string>対象レイヤ</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>

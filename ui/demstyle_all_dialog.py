@@ -4,15 +4,18 @@ from pathlib import Path
 from typing import override
 
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QColor
 from qgis.core import Qgis
 from qgis.core import QgsMapLayer
 from qgis.core import QgsVectorLayer
+from qgis.core import QgsRasterShader
+from qgis.core import QgsColorRampShader
 from qgis.PyQt import uic
 from qgis.gui import QgisInterface, QgsMapTool
 
 from ..ui.base_qgis_dialog import BaseQgisDialog
 from ..ui.settings import DialogSettings
-from ..core.style_qml_creator import StyleQmlCreator
+from ..core import COLOR_PALETTE
 from ..managers.ui_manager import UIManager
 from ..managers.elevation_manager import ElevationManager
 from ..managers.feature_manager import FeatureManager
@@ -179,21 +182,41 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         self.canvas.refreshAllLayers()
 
     def _apply_dem_style(self, layers: list[QgsMapLayer]) -> None:
-        """スタイルファイルをレイヤに適用"""
-        qml_creator = StyleQmlCreator(self.min_elevation, self.max_elevation)
+        """DEM スタイルをメモリ上のレイヤに適用"""
+        min_elev = self.min_elevation
+        max_elev = self.max_elevation
+        pitch = 20
 
         for layer in layers:
-            # レイヤーのデータソースのディレクトリパスを取得
-            provider = layer.dataProvider()
-            if not provider:
-                continue
+            # 標高レンジに対応した色アイテムを生成
+            step = (max_elev - min_elev) // pitch if pitch > 0 else 1
+            values = list(range(min_elev, max_elev + 1, step))
 
-            # スタイルファイル (*.qml) を生成
-            base_dir = Path(provider.dataSourceUri()).parent
-            qml_filepath = qml_creator.create_style_qml_file(base_dir)
+            # カラーランプシェーダを作成
+            color_shader = QgsColorRampShader()
 
-            # スタイルファイル (*.qml) をレイヤに適用
-            layer.loadNamedStyle(str(qml_filepath))
+            # 色アイテムを構築して追加
+            color_items = []
+            for i, color_hex in enumerate(COLOR_PALETTE):
+                if i < len(values):
+                    value = values[i]
+                    item = QgsColorRampShader.ColorRampItem(value, QColor(color_hex), str(value))
+                    color_items.append(item)
+
+            color_shader.setColorRampItemList(color_items)
+            color_shader.setColorRampType(QgsColorRampShader.Interpolated)
+
+            # QgsRasterShader ラッパーを作成
+            raster_shader = QgsRasterShader()
+            raster_shader.setRasterShaderFunction(color_shader)
+
+            # レイヤのレンダラを取得して新しいシェーダを適用
+            renderer = layer.renderer()
+            if renderer is not None:
+                renderer.setShader(raster_shader)
+                layer.triggerRepaint()
+
+            # レイヤツリービューのシンボルを更新
             self.layer_tree_view.refreshLayerSymbology(layer.id())
 
         # メッセージバーに表示
