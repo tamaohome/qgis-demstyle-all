@@ -124,14 +124,14 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="elevationValueGroupBox">
+    <widget class="QGroupBox" name="elevationRangeGroupBox">
      <property name="toolTip">
       <string>Sキーで減少、Wキーで増加</string>
      </property>
      <property name="title">
       <string>適用する標高</string>
      </property>
-     <layout class="QGridLayout" name="elevationValueLayout">
+     <layout class="QGridLayout" name="elevationRangeLayout">
       <item row="0" column="0">
        <widget class="QLabel" name="minElevationLabel">
         <property name="text">
