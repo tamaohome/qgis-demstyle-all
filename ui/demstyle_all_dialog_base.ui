@@ -40,14 +40,20 @@
      <property name="title">
       <string>地物レイヤ</string>
      </property>
-     <layout class="QVBoxLayout" name="currentFeatureLayout">
-      <item>
+     <layout class="QGridLayout" name="featureLayerLayout">
+      <item row="0" column="0">
        <widget class="FeatureLayerComboBox" name="featureLayerComboBox">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>24</height>
+         </size>
         </property>
         <property name="focusPolicy">
          <enum>Qt::NoFocus</enum>
@@ -57,7 +63,41 @@
         </property>
        </widget>
       </item>
-      <item>
+      <item row="0" column="1">
+       <widget class="QPushButton" name="featureLayerSettingsButton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>24</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>50</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <family>MS UI Gothic</family>
+          <pointsize>9</pointsize>
+         </font>
+        </property>
+        <property name="focusPolicy">
+         <enum>Qt::ClickFocus</enum>
+        </property>
+        <property name="text">
+         <string>設定...</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="2">
        <widget class="QTableWidget" name="currentFeatureTableWidget">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -97,7 +137,7 @@
         </property>
        </widget>
       </item>
-      <item>
+      <item row="2" column="0" colspan="2">
        <widget class="QCheckBox" name="enableAttrTableUpdateCheckBox">
         <property name="toolTip">
          <string>OKボタン押下時にアクティブな属性テーブルの&quot;標高上&quot;, &quot;標高下&quot; を書き換えます。</string>
@@ -110,7 +150,7 @@
         </property>
        </widget>
       </item>
-      <item>
+      <item row="3" column="0" colspan="2">
        <widget class="QCheckBox" name="enableAutoPanCheckBox">
         <property name="text">
          <string>地物中心にパン</string>
@@ -124,14 +164,14 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="elevationRangeGroupBox">
+    <widget class="QGroupBox" name="elevationValueGroupBox">
      <property name="toolTip">
       <string>Sキーで減少、Wキーで増加</string>
      </property>
      <property name="title">
       <string>適用する標高</string>
      </property>
-     <layout class="QGridLayout" name="elevationRangeLayout">
+     <layout class="QGridLayout" name="elevationValueLayout">
       <item row="0" column="0">
        <widget class="QLabel" name="minElevationLabel">
         <property name="text">
@@ -264,77 +304,49 @@
      <property name="title">
       <string>対象レイヤ</string>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout">
-      <item>
-       <widget class="QWidget" name="layerSettingsSearchStringsWidget" native="true">
-        <layout class="QHBoxLayout" name="searchStringHorizontalLayout">
-         <property name="spacing">
-          <number>8</number>
-         </property>
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QLabel" name="searchStringLabel">
-           <property name="text">
-            <string>検索文字列：</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="searchStringHorizontalSpacer">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
-          <widget class="QPushButton" name="searchStringRenameButton">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>60</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <family>MS UI Gothic</family>
-             <pointsize>9</pointsize>
-            </font>
-           </property>
-           <property name="focusPolicy">
-            <enum>Qt::ClickFocus</enum>
-           </property>
-           <property name="text">
-            <string>変更...</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
+     <layout class="QGridLayout" name="targetLayerLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="searchStringLabel">
+        <property name="text">
+         <string>検索文字列：</string>
+        </property>
        </widget>
       </item>
-      <item>
+      <item row="0" column="1">
+       <widget class="QPushButton" name="searchStringRenameButton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>24</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>50</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <family>MS UI Gothic</family>
+          <pointsize>9</pointsize>
+         </font>
+        </property>
+        <property name="focusPolicy">
+         <enum>Qt::ClickFocus</enum>
+        </property>
+        <property name="text">
+         <string>変更...</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="2">
        <widget class="QListWidget" name="layerListWidget">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -418,13 +430,13 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>60</width>
+          <width>0</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>60</width>
+          <width>50</width>
           <height>16777215</height>
          </size>
         </property>
