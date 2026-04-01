@@ -55,6 +55,7 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         self.previous_map_tool: QgsMapTool | None = None  # 以前の地図ツールを保存
         self.search_string = self.settings.restore_search_string()  # 検索文字列
         self.current_feature: QgsFeature | None = None
+        self._connected_selection_layer: QgsVectorLayer | None = None
 
         # マネージャーを初期化
         self.ui_manager = UIManager(self, iface)
@@ -83,6 +84,28 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
 
     def _connect_signals(self) -> None:
         self.signal_coordinator.bind()
+        self.reconnect_current_layer_selection_signal()
+
+    def on_feature_layer_changed(self, _index: int) -> None:
+        """地物レイヤ選択変更時に selectionChanged 接続を更新する。"""
+        self.reconnect_current_layer_selection_signal()
+        self.feature_manager.on_attribute_selection_changed()
+
+    def reconnect_current_layer_selection_signal(self) -> None:
+        """現在の地物レイヤに selectionChanged を再接続する。"""
+        if self._connected_selection_layer is not None:
+            try:
+                self._connected_selection_layer.selectionChanged.disconnect(
+                    self.feature_manager.on_attribute_selection_changed
+                )
+            except (TypeError, RuntimeError):
+                pass
+
+        layer = self.current_layer
+        self._connected_selection_layer = layer
+
+        if layer is not None:
+            layer.selectionChanged.connect(self.feature_manager.on_attribute_selection_changed)
 
     def get_current_data_range(self) -> int:
         """現在のデータレンジを取得する"""

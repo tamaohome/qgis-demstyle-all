@@ -31,6 +31,7 @@ class DialogSignalCoordinator:
         self.dialog.searchStringRenameButton.clicked.connect(
             self.dialog.on_search_string_rename_button_clicked
         )
+        self.dialog.featureLayerComboBox.currentIndexChanged.connect(self.dialog.on_feature_layer_changed)
 
         # チェックボックス状態を設定へ保存
         self.dialog.enableAttrTableUpdateCheckBox.stateChanged.connect(
@@ -46,8 +47,3 @@ class DialogSignalCoordinator:
                 checked == Qt.CheckState.Checked
             )
         )
-
-        if self.dialog.current_layer is not None:
-            self.dialog.current_layer.selectionChanged.connect(
-                self.dialog.feature_manager.on_attribute_selection_changed
-            )
