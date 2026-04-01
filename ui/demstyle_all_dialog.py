@@ -20,7 +20,6 @@ from ..managers.ui_manager import UIManager
 from ..managers.elevation_manager import ElevationManager
 from ..managers.feature_manager import FeatureManager
 from ..managers.dem_layer_and_range_manager import DEMLayerAndRangeManager
-from ..managers.dem_layer_and_range_manager import DATA_RANGE_VALUES
 from ..ui.mouse_release_map_tool import MouseReleaseMapTool
 from ..ui.search_string_dialog import SearchStringDialog
 from ..utils import get_version
@@ -55,7 +54,6 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
 
         # 初回起動時のデータレンジ値設定
         self.dataRangeSlider.setValue(2)
-        self.dataRangeLineEdit.setText(str(DATA_RANGE_VALUES[2]))
 
         # スピンボックスの直接入力を無効化
         self.minElevationSpinBox.lineEdit().setReadOnly(True)

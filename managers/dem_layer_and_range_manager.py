@@ -54,10 +54,6 @@ class DEMLayerAndRangeManager:
     def handle_slider_change(self, index: int) -> None:
         """スライダーの値（インデックス）変更時の処理"""
         try:
-            # リストから実数値を取得
-            actual_value = DATA_RANGE_VALUES[index]
-            # LineEditに文字列として反映
-            self.dialog.dataRangeLineEdit.setText(str(actual_value))
             # 最小値／最大値を更新
             self.dialog.elevation_manager.on_mid_elevation_changed()
         except IndexError:
