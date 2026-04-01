@@ -159,92 +159,8 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
-       <widget class="QSpinBox" name="minElevationSpinBox">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="font">
-         <font>
-          <family>ＭＳ ゴシック</family>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
-        <property name="frame">
-         <bool>true</bool>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-        <property name="minimum">
-         <number>-9999</number>
-        </property>
-        <property name="maximum">
-         <number>9999</number>
-        </property>
-        <property name="singleStep">
-         <number>5</number>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QSpinBox" name="midElevationSpinBox">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="font">
-         <font>
-          <family>ＭＳ ゴシック</family>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-        <property name="minimum">
-         <number>-9999</number>
-        </property>
-        <property name="maximum">
-         <number>9999</number>
-        </property>
-        <property name="singleStep">
-         <number>5</number>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <widget class="QSpinBox" name="maxElevationSpinBox">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="font">
-         <font>
-          <family>ＭＳ ゴシック</family>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-        <property name="minimum">
-         <number>-9999</number>
-        </property>
-        <property name="maximum">
-         <number>9999</number>
-        </property>
-        <property name="singleStep">
-         <number>5</number>
-        </property>
-       </widget>
+      <item row="1" column="0" colspan="3">
+       <widget class="ElevationInputWidget" name="elevationInputWidget"/>
       </item>
       <item row="2" column="0" colspan="3">
        <widget class="QCheckBox" name="enableCurrentFeatureElevCheckBox">
@@ -506,6 +422,11 @@
          <class>CurrentFeatureTableWidget</class>
          <extends>QTableWidget</extends>
          <header>demstyle_all.ui.current_feature_table_widget</header>
+        </customwidget>
+        <customwidget>
+         <class>ElevationInputWidget</class>
+         <extends>QWidget</extends>
+         <header>demstyle_all.ui.elevation_input_widget</header>
         </customwidget>
  </customwidgets>
  <resources/>
