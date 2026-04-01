@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QHBoxLayout
 from PyQt5.QtWidgets import QSpinBox
@@ -9,7 +11,7 @@ from PyQt5.QtWidgets import QWidget
 class ElevationInputWidget(QWidget):
     """min/mid/max の標高入力を 1 つにまとめたカスタムウィジェット。"""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
         self.min_spin_box = self._build_spin_box()
@@ -41,7 +43,12 @@ class ElevationInputWidget(QWidget):
         self.mid_spin_box.lineEdit().setReadOnly(read_only)
         self.max_spin_box.lineEdit().setReadOnly(read_only)
 
-    def connect_value_changed(self, on_min_changed, on_mid_changed, on_max_changed) -> None:
+    def connect_value_changed(
+        self,
+        on_min_changed: Callable[[int], None],
+        on_mid_changed: Callable[[int], None],
+        on_max_changed: Callable[[int], None],
+    ) -> None:
         self.min_spin_box.valueChanged.connect(on_min_changed)
         self.mid_spin_box.valueChanged.connect(on_mid_changed)
         self.max_spin_box.valueChanged.connect(on_max_changed)
