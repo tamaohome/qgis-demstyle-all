@@ -20,7 +20,6 @@ from ..managers.ui_manager import UIManager
 from ..managers.elevation_manager import ElevationManager
 from ..managers.feature_manager import FeatureManager
 from ..managers.dem_layer_and_range_manager import DEMLayerAndRangeManager
-from ..ui.elevation_input_adapter import ElevationInputAdapter
 from ..ui.mouse_release_map_tool import MouseReleaseMapTool
 from ..ui.search_string_dialog import SearchStringDialog
 from ..utils import get_version
@@ -57,11 +56,7 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         self.elevation_manager = ElevationManager(self)
         self.feature_manager = FeatureManager(self, iface)
         self.dem_layer_range_manager = DEMLayerAndRangeManager(self)
-        self.elevation_inputs = ElevationInputAdapter(
-            self.minElevationSpinBox,
-            self.midElevationSpinBox,
-            self.maxElevationSpinBox,
-        )
+        self.elevation_inputs = self.elevationInputWidget
 
         # 初回起動時のデータレンジ値設定
         self.dataRangeSlider.setValue(2)
