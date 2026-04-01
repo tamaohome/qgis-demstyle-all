@@ -34,11 +34,6 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         self.settings = DialogSettings()
         self.setupUi(self)
 
-        # 既存コード互換のため、カスタムウィジェット内スピンボックスを旧属性名に割り当てる
-        self.minElevationSpinBox = self.elevationInputWidget.min_spin_box
-        self.midElevationSpinBox = self.elevationInputWidget.mid_spin_box
-        self.maxElevationSpinBox = self.elevationInputWidget.max_spin_box
-
         # ウィンドウを常に手前に表示
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
 
@@ -286,10 +281,10 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
     def keyPressEvent(self, event):
         key = event.key()
         if key == Qt.Key_W:
-            self.midElevationSpinBox.stepUp()
+            self.elevation_inputs.step_mid_up()
             event.accept()
         elif key == Qt.Key_S:
-            self.midElevationSpinBox.stepDown()
+            self.elevation_inputs.step_mid_down()
             event.accept()
         elif key == Qt.Key_A:
             self.dataRangeSlider.setValue(

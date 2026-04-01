@@ -72,6 +72,15 @@ class ElevationInputWidget(QWidget):
         self.min_spin_box.setStyleSheet("")
         self.max_spin_box.setStyleSheet("")
 
+    def set_mid_value(self, mid_value: int) -> None:
+        self.mid_spin_box.setValue(mid_value)
+
+    def step_mid_up(self) -> None:
+        self.mid_spin_box.stepUp()
+
+    def step_mid_down(self) -> None:
+        self.mid_spin_box.stepDown()
+
     @staticmethod
     def _build_spin_box() -> QSpinBox:
         spin = QSpinBox()

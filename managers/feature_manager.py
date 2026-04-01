@@ -90,7 +90,7 @@ class FeatureManager:
         self.dialog.dataRangeSlider.setValue(data_range_idx)
 
         # 標高中心を設定
-        self.dialog.midElevationSpinBox.setValue(mid_elev)
+        self.dialog.elevation_inputs.set_mid_value(mid_elev)
 
     def pan_to_feature(self) -> None:
         """地物の中心にキャンバスをパンする"""
