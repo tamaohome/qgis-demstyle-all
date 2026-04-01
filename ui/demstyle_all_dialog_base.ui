@@ -63,8 +63,8 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="0" colspan="2">
-       <widget class="QTableWidget" name="currentFeatureTableWidget">
+        <item row="1" column="0" colspan="2">
+         <widget class="CurrentFeatureTableWidget" name="currentFeatureTableWidget">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -502,6 +502,11 @@
    <extends>QWidget</extends>
    <header>demstyle_all.ui.data_range_slider</header>
   </customwidget>
+        <customwidget>
+         <class>CurrentFeatureTableWidget</class>
+         <extends>QTableWidget</extends>
+         <header>demstyle_all.ui.current_feature_table_widget</header>
+        </customwidget>
  </customwidgets>
  <resources/>
  <connections/>

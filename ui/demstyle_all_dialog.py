@@ -56,14 +56,23 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         self.dataRangeSlider.setValue(2)
 
         # スピンボックスの直接入力を無効化
-        self.minElevationSpinBox.lineEdit().setReadOnly(True)
-        self.midElevationSpinBox.lineEdit().setReadOnly(True)
-        self.maxElevationSpinBox.lineEdit().setReadOnly(True)
+        self._set_elevation_spin_boxes_read_only()
 
         self.refresh_target_layer_list()  # レイヤ一覧を更新
         self.ui_manager.init_current_feature_table_widget()  # 地物テーブルを初期化
 
-        # シグナル接続
+        self._connect_signals()
+
+        # OKボタンの初期状態を設定
+        self._update_ok_button_state()
+
+    def _set_elevation_spin_boxes_read_only(self) -> None:
+        self.minElevationSpinBox.lineEdit().setReadOnly(True)
+        self.midElevationSpinBox.lineEdit().setReadOnly(True)
+        self.maxElevationSpinBox.lineEdit().setReadOnly(True)
+
+    def _connect_signals(self) -> None:
+        # 主操作の配線
         self.dataRangeSlider.valueChanged.connect(self.dem_layer_range_manager.handle_slider_change)
         self.setElevationButton.clicked.connect(self.start_capture_mode)
         self.minElevationSpinBox.valueChanged.connect(self.elevation_manager.on_min_elevation_changed)
@@ -74,7 +83,7 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         self.cancelButton.clicked.connect(self.on_cancel_clicked)
         self.searchStringRenameButton.clicked.connect(self.on_search_string_rename_button_clicked)
 
-        # チェックボックスのシグナル接続（状態変更時にINIファイルに保存）
+        # チェックボックス状態を設定へ保存
         self.enableAttrTableUpdateCheckBox.stateChanged.connect(
             lambda checked: self.settings.save_enable_attr_table_update(checked == Qt.CheckState.Checked)
         )
@@ -87,9 +96,6 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
 
         if self.current_layer is not None:
             self.current_layer.selectionChanged.connect(self.feature_manager.on_attribute_selection_changed)
-
-        # OKボタンの初期状態を設定
-        self._update_ok_button_state()
 
     def get_current_data_range(self) -> int:
         """現在のデータレンジを取得する"""

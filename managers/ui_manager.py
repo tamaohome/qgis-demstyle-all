@@ -1,10 +1,6 @@
-from PyQt5.QtWidgets import QTableWidgetItem
 from PyQt5.QtGui import QColor
-from PyQt5.QtCore import Qt
 from qgis.gui import QgsRubberBand
 from PyQt5.QtCore import QTimer
-
-FEATURE_HEADERS = ["No", "標高下", "標高上"]
 
 
 class UIManager:
@@ -17,82 +13,30 @@ class UIManager:
 
     def init_current_feature_table_widget(self) -> None:
         """地物テーブルを初期化する"""
-        self.dialog.currentFeatureTableWidget.clear()
-        self.dialog.currentFeatureTableWidget.setRowCount(0)
-        self.dialog.currentFeatureTableWidget.setColumnCount(3)
-
-        # 行番号を非表示
-        self.dialog.currentFeatureTableWidget.verticalHeader().setVisible(False)
-
-        # ヘッダを設定
-        self.dialog.currentFeatureTableWidget.setHorizontalHeaderLabels(FEATURE_HEADERS)
-
-        # 列幅を設定
-        self.dialog.currentFeatureTableWidget.setColumnWidth(0, 96)
-        self.dialog.currentFeatureTableWidget.setColumnWidth(1, 52)
-        self.dialog.currentFeatureTableWidget.setColumnWidth(2, 52)
+        self.dialog.currentFeatureTableWidget.initialize()
 
     def update_current_feature_table_widget(self, feature) -> None:
         """地物テーブルを更新する"""
-        # テーブル行を初期化
-        self.dialog.currentFeatureTableWidget.setRowCount(0)
-
-        # 選択中の地物が存在しない場合は中止
-        if not feature or not feature.isValid():
-            return
-
-        # 1行データを取得
-        feature_no = feature.attribute("No")
-        min_elev_raw = feature.attribute("標高下")
-        max_elev_raw = feature.attribute("標高上")
-
-        # 標高値を検証（5の倍数に丸める）
-        min_elev = self._validate_elevation_value(min_elev_raw)
-        max_elev = self._validate_elevation_value(max_elev_raw)
-
-        # テーブルに1行追加
-        self.dialog.currentFeatureTableWidget.insertRow(0)
-
-        # 各セルにデータを設定
-        self.dialog.currentFeatureTableWidget.setItem(0, 0, QTableWidgetItem(str(feature_no)))
-        self.dialog.currentFeatureTableWidget.setItem(0, 1, self._create_numeric_table_item(min_elev))
-        self.dialog.currentFeatureTableWidget.setItem(0, 2, self._create_numeric_table_item(max_elev))
+        self.dialog.currentFeatureTableWidget.set_feature(feature)
 
         # 現在の設定標高と一致する場合、ハイライト表示
         self.highlight_matching_elevation(feature)
 
     def highlight_matching_elevation(self, feature) -> None:
         """現在の設定標高と地物の標高が一致する場合、ハイライト表示する"""
-        if not feature or not feature.isValid():
-            return
+        state = self.dialog.currentFeatureTableWidget.highlight_by_elevation(
+            feature,
+            self.dialog.min_elevation,
+            self.dialog.max_elevation,
+        )
 
-        # テーブルに行が存在しない場合は中止
-        if self.dialog.currentFeatureTableWidget.rowCount() == 0:
-            return
-
-        # 1行データを取得（検証して5の倍数に揃える）
-        min_elev_raw = feature.attribute("標高下")
-        max_elev_raw = feature.attribute("標高上")
-        min_elev = self._validate_elevation_value(min_elev_raw)
-        max_elev = self._validate_elevation_value(max_elev_raw)
-
-        # 属性がいずれも 0 (null相当) の場合は灰色表示
-        if min_elev == 0 and max_elev == 0:
-            gray_color = QColor(Qt.lightGray)
-            self.dialog.currentFeatureTableWidget.item(0, 1).setBackground(gray_color)
-            self.dialog.currentFeatureTableWidget.item(0, 2).setBackground(gray_color)
+        if state in ("invalid", "empty", "null", "mismatch"):
             self.dialog.minElevationSpinBox.setStyleSheet("")
             self.dialog.maxElevationSpinBox.setStyleSheet("")
             return
 
-        # 現在の設定標高と一致する場合、ハイライト表示
-        if min_elev == self.dialog.min_elevation and max_elev == self.dialog.max_elevation:
+        if state == "match":
             cyan_color_hex = "#d6f4ff"
-            # 地物テーブルをハイライト
-            self.dialog.currentFeatureTableWidget.item(0, 1).setBackground(QColor(cyan_color_hex))
-            self.dialog.currentFeatureTableWidget.item(0, 2).setBackground(QColor(cyan_color_hex))
-
-            # スピンボックスをハイライト
             self.dialog.minElevationSpinBox.setStyleSheet(
                 f"QSpinBox {{ background-color: {cyan_color_hex}; }}"
             )
@@ -101,10 +45,6 @@ class UIManager:
             )
             return
 
-        # マッチしていない場合はスタイルをリセット
-        if self.dialog.currentFeatureTableWidget.rowCount() > 0:
-            self.dialog.currentFeatureTableWidget.item(0, 1).setBackground(QColor(Qt.white))
-            self.dialog.currentFeatureTableWidget.item(0, 2).setBackground(QColor(Qt.white))
         self.dialog.minElevationSpinBox.setStyleSheet("")
         self.dialog.maxElevationSpinBox.setStyleSheet("")
 
@@ -123,24 +63,3 @@ class UIManager:
 
         # 一定時間後に削除
         QTimer.singleShot(200, lambda: self.canvas.scene().removeItem(rubber_band))
-
-    @staticmethod
-    def _create_numeric_table_item(value) -> QTableWidgetItem:
-        """数値セルを作成する（右揃え、無効な値は"-"を表示）"""
-        try:
-            text = str(int(value)) if value is not None else "-"
-        except (ValueError, TypeError):
-            text = "-"
-
-        item = QTableWidgetItem(text)
-        item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        return item
-
-    @staticmethod
-    def _validate_elevation_value(value: float) -> int:
-        """標高値を検証し、5の倍数に丸める"""
-        try:
-            validated = round(value / 5) * 5
-            return int(validated)
-        except (ValueError, TypeError):
-            return 0

@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QComboBox
 from qgis.core import Qgis, QgsMessageLog, QgsProject, QgsVectorLayer
 
-from ..managers.ui_manager import FEATURE_HEADERS
+from .current_feature_table_widget import FEATURE_HEADERS
 
 
 class FeatureLayerComboBox(QComboBox):
