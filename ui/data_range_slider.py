@@ -22,11 +22,7 @@ class DataRangeSlider(QWidget):
     valueChanged = pyqtSignal(int)
 
     def __init__(self, parent: QWidget | None = None):
-        """ウィジェットを初期化
-
-        Args:
-            parent: 親ウィジェット
-        """
+        """ウィジェットを初期化"""
         super().__init__(parent)
         self._init_ui()
         self._setup_signals()

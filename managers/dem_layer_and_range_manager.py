@@ -1,8 +1,15 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from PyQt5.QtCore import Qt
 from ..ui.base_qgis_dialog import BaseQgisDialog
 from qgis.core import Qgis, QgsMapLayerType, QgsRaster, QgsPointXY
 from PyQt5.QtWidgets import QListWidgetItem
 from qgis.core import QgsMapLayer
+
+if TYPE_CHECKING:
+    from ..ui.demstyle_all_dialog import DEMStyleAllDialog
 
 DATA_RANGE_VALUES = [10, 20, 50, 100, 200, 500]
 
@@ -10,7 +17,7 @@ DATA_RANGE_VALUES = [10, 20, 50, 100, 200, 500]
 class DEMLayerAndRangeManager:
     """標高レイヤおよびデータレンジ関連処理の管理クラス"""
 
-    def __init__(self, dialog: BaseQgisDialog):
+    def __init__(self, dialog: BaseQgisDialog | DEMStyleAllDialog) -> None:
         self.dialog = dialog
 
     def refresh_target_layer_list(self) -> None:
@@ -51,7 +58,7 @@ class DEMLayerAndRangeManager:
                 layers.append(layer)
         return layers
 
-    def handle_slider_change(self, index: int) -> None:
+    def handle_slider_change(self, _index: int) -> None:
         """スライダーの値（インデックス）変更時の処理"""
         try:
             # 最小値／最大値を更新
@@ -93,7 +100,7 @@ class DEMLayerAndRangeManager:
         # 標高値の取得に失敗した場合 None を返す
         return None
 
-    def handle_get_elevation(self, point: QgsPointXY, button: int) -> None:
+    def handle_get_elevation(self, point: QgsPointXY, _button: int) -> None:
         """標高を取得後の処理"""
         self.dialog.canvas.unsetMapTool(self.dialog.map_tool)  # ツールを解除
 

@@ -1,9 +1,17 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from ..ui.base_qgis_dialog import BaseQgisDialog
-from qgis.core import QgsGeometry, QgsMapLayerType
+from qgis.core import QgsMapLayerType
 from qgis.core import Qgis
 from qgis.core import QgsFeature
+from qgis.core import QgsPointXY
 from qgis.core import QgsCoordinateTransform
 from qgis.core import QgsProject
+
+if TYPE_CHECKING:
+    from qgis.gui import QgisInterface
 
 from .dem_layer_and_range_manager import DATA_RANGE_VALUES
 
@@ -11,12 +19,12 @@ from .dem_layer_and_range_manager import DATA_RANGE_VALUES
 class FeatureManager:
     """地物関連処理の管理クラス"""
 
-    def __init__(self, dialog: BaseQgisDialog, iface):
+    def __init__(self, dialog: BaseQgisDialog, iface: QgisInterface) -> None:
         self.dialog = dialog
         self.iface = iface
         self.canvas = iface.mapCanvas()
 
-    def on_attribute_selection_changed(self):
+    def on_attribute_selection_changed(self) -> None:
         """属性テーブルの選択変更時の処理"""
         # ウィンドウが非表示の場合は中止
         if not self.dialog.isVisible():
@@ -24,7 +32,7 @@ class FeatureManager:
 
         # 現在のレイヤを取得
         layer = self.dialog.current_layer
-        if not layer:
+        if layer is None:
             return
 
         # 選択済み地物を取得
@@ -38,7 +46,7 @@ class FeatureManager:
         # 地物オブジェクトを取得
         self.dialog.current_feature = layer.getFeature(feature_id)
         feature = self.dialog.current_feature
-        if not feature:
+        if feature is None:
             return
         if not feature.isValid():
             return
@@ -94,6 +102,9 @@ class FeatureManager:
 
     def pan_to_feature(self) -> None:
         """地物の中心にキャンバスをパンする"""
+        if self.canvas is None:
+            return
+
         # 「地物中心にパン」が有効化されていない場合は中止
         if not self.dialog.is_auto_pan_enabled():
             return
@@ -186,8 +197,11 @@ class FeatureManager:
 
         layer.dataChanged.emit()  # 属性テーブルの表示を更新
 
-    def _transform_to_canvas_crs(self, point: QgsGeometry) -> QgsGeometry:
+    def _transform_to_canvas_crs(self, point: QgsPointXY) -> QgsPointXY:
         """レイヤーのCRSからキャンバスのCRSに座標を変換"""
+        if self.canvas is None:
+            return point
+
         layer = self.dialog.current_layer
         if not layer or layer.crs() == self.canvas.mapSettings().destinationCrs():
             return point
