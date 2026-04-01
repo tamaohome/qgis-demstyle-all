@@ -20,6 +20,7 @@ from ..managers.ui_manager import UIManager
 from ..managers.elevation_manager import ElevationManager
 from ..managers.feature_manager import FeatureManager
 from ..managers.dem_layer_and_range_manager import DEMLayerAndRangeManager
+from ..ui.elevation_input_adapter import ElevationInputAdapter
 from ..ui.mouse_release_map_tool import MouseReleaseMapTool
 from ..ui.search_string_dialog import SearchStringDialog
 from ..utils import get_version
@@ -51,6 +52,11 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         self.elevation_manager = ElevationManager(self)
         self.feature_manager = FeatureManager(self, iface)
         self.dem_layer_range_manager = DEMLayerAndRangeManager(self)
+        self.elevation_inputs = ElevationInputAdapter(
+            self.minElevationSpinBox,
+            self.midElevationSpinBox,
+            self.maxElevationSpinBox,
+        )
 
         # 初回起動時のデータレンジ値設定
         self.dataRangeSlider.setValue(2)
@@ -67,17 +73,17 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         self._update_ok_button_state()
 
     def _set_elevation_spin_boxes_read_only(self) -> None:
-        self.minElevationSpinBox.lineEdit().setReadOnly(True)
-        self.midElevationSpinBox.lineEdit().setReadOnly(True)
-        self.maxElevationSpinBox.lineEdit().setReadOnly(True)
+        self.elevation_inputs.set_read_only(True)
 
     def _connect_signals(self) -> None:
         # 主操作の配線
         self.dataRangeSlider.valueChanged.connect(self.dem_layer_range_manager.handle_slider_change)
         self.setElevationButton.clicked.connect(self.start_capture_mode)
-        self.minElevationSpinBox.valueChanged.connect(self.elevation_manager.on_min_elevation_changed)
-        self.midElevationSpinBox.valueChanged.connect(self.elevation_manager.on_mid_elevation_changed)
-        self.maxElevationSpinBox.valueChanged.connect(self.elevation_manager.on_max_elevation_changed)
+        self.elevation_inputs.connect_value_changed(
+            self.elevation_manager.on_min_elevation_changed,
+            self.elevation_manager.on_mid_elevation_changed,
+            self.elevation_manager.on_max_elevation_changed,
+        )
         self.map_tool.canvasClicked.connect(self.dem_layer_range_manager.handle_get_elevation)
         self.okButton.clicked.connect(self.on_ok_clicked)
         self.cancelButton.clicked.connect(self.on_cancel_clicked)
@@ -115,15 +121,15 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
 
     @property
     def min_elevation(self) -> int:
-        return self.minElevationSpinBox.value()
+        return self.elevation_inputs.min_value
 
     @property
     def mid_elevation(self) -> int:
-        return self.midElevationSpinBox.value()
+        return self.elevation_inputs.mid_value
 
     @property
     def max_elevation(self) -> int:
-        return self.maxElevationSpinBox.value()
+        return self.elevation_inputs.max_value
 
     @property
     def has_elevation(self) -> bool:

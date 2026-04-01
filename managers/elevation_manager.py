@@ -16,9 +16,9 @@ class ElevationManager:
         data_range = self.dialog.get_current_data_range()
         min_value, mid_value, max_value = calculate_elevation_triplet(
             source=source,
-            min_value=self.dialog.minElevationSpinBox.value(),
-            mid_value=self.dialog.midElevationSpinBox.value(),
-            max_value=self.dialog.maxElevationSpinBox.value(),
+            min_value=self.dialog.elevation_inputs.min_value,
+            mid_value=self.dialog.elevation_inputs.mid_value,
+            max_value=self.dialog.elevation_inputs.max_value,
             data_range=data_range,
         )
 
@@ -39,17 +39,7 @@ class ElevationManager:
 
     def _set_elevation_values_blocking(self, min_value: int, mid_value: int, max_value: int) -> None:
         """シグナルを抑止しながら 3 つの値を同期更新する。"""
-        self.dialog.minElevationSpinBox.blockSignals(True)
-        self.dialog.midElevationSpinBox.blockSignals(True)
-        self.dialog.maxElevationSpinBox.blockSignals(True)
-        try:
-            self.dialog.minElevationSpinBox.setValue(min_value)
-            self.dialog.midElevationSpinBox.setValue(mid_value)
-            self.dialog.maxElevationSpinBox.setValue(max_value)
-        finally:
-            self.dialog.minElevationSpinBox.blockSignals(False)
-            self.dialog.midElevationSpinBox.blockSignals(False)
-            self.dialog.maxElevationSpinBox.blockSignals(False)
+        self.dialog.elevation_inputs.set_values_blocking(min_value, mid_value, max_value)
 
     @staticmethod
     def validate_elevation_value(value: float) -> int:

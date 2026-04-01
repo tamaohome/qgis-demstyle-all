@@ -31,22 +31,14 @@ class UIManager:
         )
 
         if state in ("invalid", "empty", "null", "mismatch"):
-            self.dialog.minElevationSpinBox.setStyleSheet("")
-            self.dialog.maxElevationSpinBox.setStyleSheet("")
+            self.dialog.elevation_inputs.clear_highlight()
             return
 
         if state == "match":
-            cyan_color_hex = "#d6f4ff"
-            self.dialog.minElevationSpinBox.setStyleSheet(
-                f"QSpinBox {{ background-color: {cyan_color_hex}; }}"
-            )
-            self.dialog.maxElevationSpinBox.setStyleSheet(
-                f"QSpinBox {{ background-color: {cyan_color_hex}; }}"
-            )
+            self.dialog.elevation_inputs.set_match_highlight(True)
             return
 
-        self.dialog.minElevationSpinBox.setStyleSheet("")
-        self.dialog.maxElevationSpinBox.setStyleSheet("")
+        self.dialog.elevation_inputs.clear_highlight()
 
     def highlight_feature(self, feature, layer) -> None:
         """選択中の地物をハイライト"""
