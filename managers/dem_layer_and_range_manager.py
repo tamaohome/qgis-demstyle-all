@@ -114,7 +114,7 @@ class DEMLayerAndRangeManager:
         mid_elevation = round(elevation / 5) * 5
 
         # スピンボックスに値をセット
-        self.dialog.elevation_inputs.set_mid_value(mid_elevation)
+        self.dialog.set_mid_elevation(mid_elevation)
 
         # OKボタンの状態を更新
         self.dialog._update_ok_button_state()

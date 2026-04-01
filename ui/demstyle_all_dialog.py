@@ -114,6 +114,22 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         """標高設定対象のレイヤ配列を取得する"""
         return self.dem_layer_range_manager.get_target_layers()
 
+    def set_mid_elevation(self, mid_value: int) -> None:
+        """標高中心を更新する。"""
+        self.elevation_inputs.set_mid_value(mid_value)
+
+    def is_current_feature_elev_enabled(self) -> bool:
+        """属性テーブル標高読込の有効状態を返す。"""
+        return self.enableCurrentFeatureElevCheckBox.isChecked()
+
+    def is_auto_pan_enabled(self) -> bool:
+        """地物中心パンの有効状態を返す。"""
+        return self.enableAutoPanCheckBox.isChecked()
+
+    def is_attr_table_update_enabled(self) -> bool:
+        """属性テーブル書き換えの有効状態を返す。"""
+        return self.enableAttrTableUpdateCheckBox.isChecked()
+
     @property
     def min_elevation(self) -> int:
         return self.elevation_inputs.min_value

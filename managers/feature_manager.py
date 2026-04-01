@@ -73,7 +73,7 @@ class FeatureManager:
     def load_elevation_settings(self, feature: QgsFeature) -> None:
         """標高設定およびデータレンジを更新"""
         # チェックボックスで無効化の場合は中止
-        if not self.dialog.enableCurrentFeatureElevCheckBox.isChecked():
+        if not self.dialog.is_current_feature_elev_enabled():
             return
 
         # 標高を取得 (失敗する場合は中止)
@@ -90,12 +90,12 @@ class FeatureManager:
         self.dialog.dataRangeSlider.setValue(data_range_idx)
 
         # 標高中心を設定
-        self.dialog.elevation_inputs.set_mid_value(mid_elev)
+        self.dialog.set_mid_elevation(mid_elev)
 
     def pan_to_feature(self) -> None:
         """地物の中心にキャンバスをパンする"""
         # 「地物中心にパン」が有効化されていない場合は中止
-        if not self.dialog.enableAutoPanCheckBox.isChecked():
+        if not self.dialog.is_auto_pan_enabled():
             return
 
         # 選択中の地物が存在しない場合は中止
@@ -148,7 +148,7 @@ class FeatureManager:
     def write_attr_elev_table(self, max_elev: int, min_elev: int) -> None:
         """属性テーブルの標高値を書き出す"""
         # 属性テーブル書き換えを有効化 がOFFの場合は中止
-        if not self.dialog.enableAttrTableUpdateCheckBox.isChecked():
+        if not self.dialog.is_attr_table_update_enabled():
             return
 
         # 現在のレイヤを取得
