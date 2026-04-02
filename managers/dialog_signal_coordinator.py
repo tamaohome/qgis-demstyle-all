@@ -29,6 +29,20 @@ class DialogSignalCoordinator:
         self._bind_checkbox_persistence()
         self._is_bound = True
 
+    def refresh_layer_contexts(self) -> None:
+        """DEM/Feature のレイヤ更新処理をまとめて実行する。"""
+        self.refresh_dem_layers()
+        self.refresh_feature_layers()
+
+    def refresh_dem_layers(self) -> None:
+        """DEM 対象レイヤ一覧を更新する。"""
+        self.dialog.dem_layer_range_manager.refresh_target_layer_list()
+
+    def refresh_feature_layers(self) -> None:
+        """Feature レイヤ一覧と selectionChanged 接続を同期する。"""
+        self.dialog.featureLayerComboBox.refresh_layers()
+        self.dialog.reconnect_current_layer_selection_signal()
+
     def _bind_primary_controls(self) -> None:
         """操作系の signal/slot を配線する。"""
         self.dialog.dataRangeSlider.valueChanged.connect(

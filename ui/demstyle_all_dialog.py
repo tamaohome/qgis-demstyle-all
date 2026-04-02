@@ -71,11 +71,10 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         # スピンボックスの直接入力を無効化
         self._set_elevation_spin_boxes_read_only()
 
-        self.refresh_target_layer_list()  # レイヤ一覧を更新
         self.ui_manager.init_current_feature_table_widget()  # 地物テーブルを初期化
 
         self._connect_signals()
-        self.refresh_feature_layer_context()
+        self.refresh_layer_contexts()
 
         # OKボタンの初期状態を設定
         self._update_ok_button_state()
@@ -88,8 +87,11 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
 
     def refresh_feature_layer_context(self) -> None:
         """地物レイヤ一覧を再読込し、selectionChanged 接続を同期する。"""
-        self.featureLayerComboBox.refresh_layers()
-        self.reconnect_current_layer_selection_signal()
+        self.signal_coordinator.refresh_feature_layers()
+
+    def refresh_layer_contexts(self) -> None:
+        """DEM/Feature のレイヤ更新処理をまとめて実行する。"""
+        self.signal_coordinator.refresh_layer_contexts()
 
     def on_feature_layer_changed(self, _index: int) -> None:
         """地物レイヤ選択変更時に selectionChanged 接続を更新する。"""
@@ -122,7 +124,7 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
 
     def refresh_target_layer_list(self) -> None:
         """標高設定対象のレイヤ一覧を更新する"""
-        self.dem_layer_range_manager.refresh_target_layer_list()
+        self.signal_coordinator.refresh_dem_layers()
 
     def get_target_layers(self) -> list[QgsMapLayer]:
         """標高設定対象のレイヤ配列を取得する"""
@@ -192,8 +194,8 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         self.enableAutoPanCheckBox.setChecked(enable_auto_pan)
         self.enableCurrentFeatureElevCheckBox.setChecked(enable_current_feature_elev)
 
-        # 地物レイヤ一覧・選択シグナルを同期
-        self.refresh_feature_layer_context()
+        # DEM/Feature のレイヤ一覧と接続を同期
+        self.refresh_layer_contexts()
 
         # OKボタンへフォーカスを設定
         self.okButton.setFocus()
@@ -275,7 +277,7 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
             self.search_string = dialog.get_search_string()
             self.settings.save_search_string(self.search_string)
             self.update_search_string_label()
-            self.refresh_target_layer_list()
+            self.refresh_layer_contexts()
 
     def update_search_string_label(self) -> None:
         """検索文字列ラベルを更新"""
