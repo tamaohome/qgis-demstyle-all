@@ -4,14 +4,13 @@ from typing import TYPE_CHECKING
 
 from PyQt5.QtCore import Qt
 from ..ui.base_qgis_dialog import BaseQgisDialog
+from ..core.data_range_values import DATA_RANGE_VALUES
 from qgis.core import Qgis, QgsMapLayerType, QgsRaster, QgsPointXY
 from PyQt5.QtWidgets import QListWidgetItem
 from qgis.core import QgsMapLayer
 
 if TYPE_CHECKING:
     from ..ui.demstyle_all_dialog import DEMStyleAllDialog
-
-DATA_RANGE_VALUES = [10, 20, 50, 100, 200, 500]
 
 
 class DEMLayerAndRangeManager:

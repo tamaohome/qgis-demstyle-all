@@ -9,11 +9,10 @@ from qgis.core import QgsFeature
 from qgis.core import QgsPointXY
 from qgis.core import QgsCoordinateTransform
 from qgis.core import QgsProject
+from ..core.data_range_values import DATA_RANGE_VALUES
 
 if TYPE_CHECKING:
     from qgis.gui import QgisInterface
-
-from .dem_layer_and_range_manager import DATA_RANGE_VALUES
 
 
 class FeatureManager:
