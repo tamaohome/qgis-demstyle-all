@@ -75,6 +75,7 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         self.ui_manager.init_current_feature_table_widget()  # 地物テーブルを初期化
 
         self._connect_signals()
+        self.refresh_feature_layer_context()
 
         # OKボタンの初期状態を設定
         self._update_ok_button_state()
@@ -84,6 +85,10 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
 
     def _connect_signals(self) -> None:
         self.signal_coordinator.bind()
+
+    def refresh_feature_layer_context(self) -> None:
+        """地物レイヤ一覧を再読込し、selectionChanged 接続を同期する。"""
+        self.featureLayerComboBox.refresh_layers()
         self.reconnect_current_layer_selection_signal()
 
     def on_feature_layer_changed(self, _index: int) -> None:
@@ -186,6 +191,9 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         self.enableAttrTableUpdateCheckBox.setChecked(enable_attr_table_update)
         self.enableAutoPanCheckBox.setChecked(enable_auto_pan)
         self.enableCurrentFeatureElevCheckBox.setChecked(enable_current_feature_elev)
+
+        # 地物レイヤ一覧・選択シグナルを同期
+        self.refresh_feature_layer_context()
 
         # OKボタンへフォーカスを設定
         self.okButton.setFocus()
