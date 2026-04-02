@@ -1,15 +1,20 @@
+from __future__ import annotations
+
+from typing import Sequence
+
 from PyQt5.QtWidgets import QComboBox
+from PyQt5.QtWidgets import QWidget
 from qgis.core import Qgis, QgsMessageLog, QgsProject, QgsVectorLayer
 
-from ..managers.ui_manager import FEATURE_HEADERS
+from .current_feature_table_widget import FEATURE_HEADERS
 
 
 class FeatureLayerComboBox(QComboBox):
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.refresh_layers()
 
-    def refresh_layers(self):
+    def refresh_layers(self) -> None:
         """地物レイヤをロードする"""
         # 現在の選択を記憶（更新後に復元するため）
         prev_id = self.currentData()
@@ -64,11 +69,12 @@ class FeatureLayerComboBox(QComboBox):
             if not project:
                 return None
             layer = project.mapLayer(layer_id)
-            assert isinstance(layer, QgsVectorLayer)
-            return layer
+            if isinstance(layer, QgsVectorLayer):
+                return layer
+            return None
         except Exception:
             return None
 
-    def _has_header(self, layer, header: list[str]) -> bool:
+    def _has_header(self, layer: QgsVectorLayer, header: Sequence[str]) -> bool:
         layer_field_names = [field.name() for field in layer.fields()]
         return all(name in layer_field_names for name in header)

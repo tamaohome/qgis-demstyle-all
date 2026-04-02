@@ -1,11 +1,16 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 from typing import override
 
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QKeyEvent
+from PyQt5.QtGui import QShowEvent
 from qgis.core import Qgis
+from qgis.core import QgsFeature
 from qgis.core import QgsMapLayer
 from qgis.core import QgsVectorLayer
 from qgis.core import QgsRasterShader
@@ -20,10 +25,13 @@ from ..managers.ui_manager import UIManager
 from ..managers.elevation_manager import ElevationManager
 from ..managers.feature_manager import FeatureManager
 from ..managers.dem_layer_and_range_manager import DEMLayerAndRangeManager
-from ..managers.dem_layer_and_range_manager import DATA_RANGE_VALUES
+from ..managers.dialog_signal_coordinator import DialogSignalCoordinator
 from ..ui.mouse_release_map_tool import MouseReleaseMapTool
 from ..ui.search_string_dialog import SearchStringDialog
 from ..utils import get_version
+
+if TYPE_CHECKING:
+    from ..ui.elevation_input_widget import ElevationInputWidget
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(str(Path(__file__).parent / "demstyle_all_dialog_base.ui"))
@@ -46,52 +54,65 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         self.map_tool = MouseReleaseMapTool(self.canvas)
         self.previous_map_tool: QgsMapTool | None = None  # 以前の地図ツールを保存
         self.search_string = self.settings.restore_search_string()  # 検索文字列
+        self.current_feature: QgsFeature | None = None
+        self._connected_selection_layer: QgsVectorLayer | None = None
 
         # マネージャーを初期化
         self.ui_manager = UIManager(self, iface)
         self.elevation_manager = ElevationManager(self)
         self.feature_manager = FeatureManager(self, iface)
         self.dem_layer_range_manager = DEMLayerAndRangeManager(self)
+        self.signal_coordinator = DialogSignalCoordinator(self)
+        self.elevation_inputs: ElevationInputWidget = self.elevationInputWidget
 
         # 初回起動時のデータレンジ値設定
         self.dataRangeSlider.setValue(2)
-        self.dataRangeLineEdit.setText(str(DATA_RANGE_VALUES[2]))
 
         # スピンボックスの直接入力を無効化
-        self.minElevationSpinBox.lineEdit().setReadOnly(True)
-        self.midElevationSpinBox.lineEdit().setReadOnly(True)
-        self.maxElevationSpinBox.lineEdit().setReadOnly(True)
+        self._set_elevation_spin_boxes_read_only()
 
-        self.refresh_target_layer_list()  # レイヤ一覧を更新
         self.ui_manager.init_current_feature_table_widget()  # 地物テーブルを初期化
 
-        # シグナル接続
-        self.dataRangeSlider.valueChanged.connect(self.dem_layer_range_manager.handle_slider_change)
-        self.setElevationButton.clicked.connect(self.start_capture_mode)
-        self.minElevationSpinBox.valueChanged.connect(self.elevation_manager.on_min_elevation_changed)
-        self.midElevationSpinBox.valueChanged.connect(self.elevation_manager.on_mid_elevation_changed)
-        self.maxElevationSpinBox.valueChanged.connect(self.elevation_manager.on_max_elevation_changed)
-        self.map_tool.canvasClicked.connect(self.dem_layer_range_manager.handle_get_elevation)
-        self.okButton.clicked.connect(self.on_ok_clicked)
-        self.cancelButton.clicked.connect(self.on_cancel_clicked)
-        self.searchStringRenameButton.clicked.connect(self.on_search_string_rename_button_clicked)
-
-        # チェックボックスのシグナル接続（状態変更時にINIファイルに保存）
-        self.enableAttrTableUpdateCheckBox.stateChanged.connect(
-            lambda checked: self.settings.save_enable_attr_table_update(checked == Qt.CheckState.Checked)
-        )
-        self.enableAutoPanCheckBox.stateChanged.connect(
-            lambda checked: self.settings.save_enable_auto_pan(checked == Qt.CheckState.Checked)
-        )
-        self.enableCurrentFeatureElevCheckBox.stateChanged.connect(
-            lambda checked: self.settings.save_enable_current_feature_elev(checked == Qt.CheckState.Checked)
-        )
-
-        if self.current_layer is not None:
-            self.current_layer.selectionChanged.connect(self.feature_manager.on_attribute_selection_changed)
+        self._connect_signals()
+        self.refresh_layer_contexts()
 
         # OKボタンの初期状態を設定
         self._update_ok_button_state()
+
+    def _set_elevation_spin_boxes_read_only(self) -> None:
+        self.elevation_inputs.set_read_only(True)
+
+    def _connect_signals(self) -> None:
+        self.signal_coordinator.bind()
+
+    def refresh_feature_layer_context(self) -> None:
+        """地物レイヤ一覧を再読込し、selectionChanged 接続を同期する。"""
+        self.signal_coordinator.refresh_feature_layers()
+
+    def refresh_layer_contexts(self) -> None:
+        """DEM/Feature のレイヤ更新処理をまとめて実行する。"""
+        self.signal_coordinator.refresh_layer_contexts()
+
+    def on_feature_layer_changed(self, _index: int) -> None:
+        """地物レイヤ選択変更時に selectionChanged 接続を更新する。"""
+        self.reconnect_current_layer_selection_signal()
+        self.feature_manager.on_attribute_selection_changed()
+
+    def reconnect_current_layer_selection_signal(self) -> None:
+        """現在の地物レイヤに selectionChanged を再接続する。"""
+        if self._connected_selection_layer is not None:
+            try:
+                self._connected_selection_layer.selectionChanged.disconnect(
+                    self.feature_manager.on_attribute_selection_changed
+                )
+            except (TypeError, RuntimeError):
+                pass
+
+        layer = self.current_layer
+        self._connected_selection_layer = layer
+
+        if layer is not None:
+            layer.selectionChanged.connect(self.feature_manager.on_attribute_selection_changed)
 
     def get_current_data_range(self) -> int:
         """現在のデータレンジを取得する"""
@@ -103,23 +124,39 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
 
     def refresh_target_layer_list(self) -> None:
         """標高設定対象のレイヤ一覧を更新する"""
-        self.dem_layer_range_manager.refresh_target_layer_list()
+        self.signal_coordinator.refresh_dem_layers()
 
     def get_target_layers(self) -> list[QgsMapLayer]:
         """標高設定対象のレイヤ配列を取得する"""
         return self.dem_layer_range_manager.get_target_layers()
 
+    def set_mid_elevation(self, mid_value: int) -> None:
+        """標高中心を更新する。"""
+        self.elevation_inputs.set_mid_value(mid_value)
+
+    def is_current_feature_elev_enabled(self) -> bool:
+        """属性テーブル標高読込の有効状態を返す。"""
+        return self.enableCurrentFeatureElevCheckBox.isChecked()
+
+    def is_auto_pan_enabled(self) -> bool:
+        """地物中心パンの有効状態を返す。"""
+        return self.enableAutoPanCheckBox.isChecked()
+
+    def is_attr_table_update_enabled(self) -> bool:
+        """属性テーブル書き換えの有効状態を返す。"""
+        return self.enableAttrTableUpdateCheckBox.isChecked()
+
     @property
     def min_elevation(self) -> int:
-        return self.minElevationSpinBox.value()
+        return self.elevation_inputs.min_value
 
     @property
     def mid_elevation(self) -> int:
-        return self.midElevationSpinBox.value()
+        return self.elevation_inputs.mid_value
 
     @property
     def max_elevation(self) -> int:
-        return self.maxElevationSpinBox.value()
+        return self.elevation_inputs.max_value
 
     @property
     def has_elevation(self) -> bool:
@@ -135,7 +172,7 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         self.okButton.setEnabled(self.has_elevation)
 
     @override
-    def showEvent(self, event):
+    def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
 
         # ダイアログ設定を復元
@@ -157,6 +194,9 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         self.enableAutoPanCheckBox.setChecked(enable_auto_pan)
         self.enableCurrentFeatureElevCheckBox.setChecked(enable_current_feature_elev)
 
+        # DEM/Feature のレイヤ一覧と接続を同期
+        self.refresh_layer_contexts()
+
         # OKボタンへフォーカスを設定
         self.okButton.setFocus()
 
@@ -167,7 +207,7 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         self.raise_()
         self.activateWindow()
 
-    def on_ok_clicked(self):
+    def on_ok_clicked(self) -> None:
         """OKボタン押下時の処理"""
         # スタイルファイルをレイヤに適用
         layers = self.get_target_layers()
@@ -237,7 +277,7 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
             self.search_string = dialog.get_search_string()
             self.settings.save_search_string(self.search_string)
             self.update_search_string_label()
-            self.refresh_target_layer_list()
+            self.refresh_layer_contexts()
 
     def update_search_string_label(self) -> None:
         """検索文字列ラベルを更新"""
@@ -261,25 +301,25 @@ class DEMStyleAllDialog(BaseQgisDialog, FORM_CLASS):
         self.settings.save_dialog_state(self)
 
     @override
-    def closeEvent(self, event):
+    def closeEvent(self, event: QCloseEvent) -> None:
         """ウィンドウを閉じる前に設定を保存"""
         self._save_dialog_state()
         event.accept()
 
     @override
-    def reject(self):
+    def reject(self) -> None:
         """ダイアログをreject時に設定を保存"""
         self._save_dialog_state()
         super().reject()
 
     @override
-    def keyPressEvent(self, event):
+    def keyPressEvent(self, event: QKeyEvent) -> None:
         key = event.key()
         if key == Qt.Key_W:
-            self.midElevationSpinBox.stepUp()
+            self.elevation_inputs.step_mid_up()
             event.accept()
         elif key == Qt.Key_S:
-            self.midElevationSpinBox.stepDown()
+            self.elevation_inputs.step_mid_down()
             event.accept()
         elif key == Qt.Key_A:
             self.dataRangeSlider.setValue(

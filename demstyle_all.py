@@ -1,6 +1,11 @@
+from __future__ import annotations
+
+from collections.abc import Callable
+from typing import TYPE_CHECKING
+
 from PyQt5.QtCore import QCoreApplication
 from PyQt5.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction
+from PyQt5.QtWidgets import QAction
 
 # Initialize Qt resources from file resources.py
 from .resources import *  # noqa: F403
@@ -9,11 +14,14 @@ from .resources import *  # noqa: F403
 from .ui.demstyle_all_dialog import DEMStyleAllDialog
 import os.path
 
+if TYPE_CHECKING:
+    from qgis.gui import QgisInterface
+
 
 class DEMStyleAll:
     """QGIS Plugin Implementation."""
 
-    def __init__(self, iface):
+    def __init__(self, iface: QgisInterface) -> None:
         """Constructor.
 
         :param iface: An interface instance that will be passed to this class
@@ -27,17 +35,17 @@ class DEMStyleAll:
         self.plugin_dir = os.path.dirname(__file__)
 
         # Declare instance attributes
-        self.actions = []
+        self.actions: list[QAction] = []
         self.menu = self.tr("&DEM Style All")
 
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
-        self.first_start = None
+        self.first_start: bool | None = None
 
-        self.dlg = None
+        self.dlg: DEMStyleAllDialog | None = None
 
     # noinspection PyMethodMayBeStatic
-    def tr(self, message):
+    def tr(self, message: str) -> str:
         """Get the translation for a string using Qt translation API.
 
         We implement this ourselves since we do not inherit QObject.
@@ -53,16 +61,16 @@ class DEMStyleAll:
 
     def add_action(
         self,
-        icon_path,
-        text,
-        callback,
+        icon_path: str,
+        text: str,
+        callback: Callable[[], None],
         enabled_flag=True,
         add_to_menu=True,
         add_to_toolbar=True,
         status_tip=None,
         whats_this=None,
         parent=None,
-    ):
+    ) -> QAction:
         """Add a toolbar icon to the toolbar.
 
         :param icon_path: Path to the icon for this action. Can be a resource
@@ -124,7 +132,7 @@ class DEMStyleAll:
 
         return action
 
-    def initGui(self):
+    def initGui(self) -> None:
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
         icon_path = ":/plugins/demstyle_all/icon.png"
@@ -138,13 +146,13 @@ class DEMStyleAll:
         # will be set False in run()
         self.first_start = True
 
-    def unload(self):
+    def unload(self) -> None:
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
             self.iface.removePluginMenu(self.tr("&DEM Style All"), action)
             self.iface.removeToolBarIcon(action)
 
-    def run(self):
+    def run(self) -> None:
         """Run method that performs all the real work"""
 
         # Create the dialog with elements (after translation) and keep reference
