@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 VoidCallback: TypeAlias = Callable[[], None]
 IndexChangedCallback: TypeAlias = Callable[[int], None]
+StateChangedCallback: TypeAlias = Callable[[int], None]
 
 
 class DialogSignalCoordinator:
@@ -18,10 +19,15 @@ class DialogSignalCoordinator:
 
     def __init__(self, dialog: DEMStyleAllDialog) -> None:
         self.dialog = dialog
+        self._is_bound = False
 
     def bind(self) -> None:
+        if self._is_bound:
+            return
+
         self._bind_primary_controls()
         self._bind_checkbox_persistence()
+        self._is_bound = True
 
     def _bind_primary_controls(self) -> None:
         """操作系の signal/slot を配線する。"""
@@ -52,16 +58,23 @@ class DialogSignalCoordinator:
 
     def _bind_checkbox_persistence(self) -> None:
         """チェックボックス変更時に設定を保存する。"""
-        self.dialog.enableAttrTableUpdateCheckBox.stateChanged.connect(
-            lambda checked: self.dialog.settings.save_enable_attr_table_update(
-                checked == Qt.CheckState.Checked
-            )
+        on_attr_table_state_changed: StateChangedCallback = self.on_attr_table_state_changed
+        on_auto_pan_state_changed: StateChangedCallback = self.on_auto_pan_state_changed
+        on_current_feature_elev_state_changed: StateChangedCallback = (
+            self.on_current_feature_elev_state_changed
         )
-        self.dialog.enableAutoPanCheckBox.stateChanged.connect(
-            lambda checked: self.dialog.settings.save_enable_auto_pan(checked == Qt.CheckState.Checked)
-        )
+
+        self.dialog.enableAttrTableUpdateCheckBox.stateChanged.connect(on_attr_table_state_changed)
+        self.dialog.enableAutoPanCheckBox.stateChanged.connect(on_auto_pan_state_changed)
         self.dialog.enableCurrentFeatureElevCheckBox.stateChanged.connect(
-            lambda checked: self.dialog.settings.save_enable_current_feature_elev(
-                checked == Qt.CheckState.Checked
-            )
+            on_current_feature_elev_state_changed
         )
+
+    def on_attr_table_state_changed(self, checked: int) -> None:
+        self.dialog.settings.save_enable_attr_table_update(checked == Qt.CheckState.Checked)
+
+    def on_auto_pan_state_changed(self, checked: int) -> None:
+        self.dialog.settings.save_enable_auto_pan(checked == Qt.CheckState.Checked)
+
+    def on_current_feature_elev_state_changed(self, checked: int) -> None:
+        self.dialog.settings.save_enable_current_feature_elev(checked == Qt.CheckState.Checked)
