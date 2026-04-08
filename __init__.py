@@ -24,6 +24,14 @@
  This script initializes the plugin, making it known to QGIS.
 """
 
+import sys
+from pathlib import Path
+
+
+plugin_root = str(Path(__file__).resolve().parent)
+if plugin_root not in sys.path:
+    sys.path.insert(0, plugin_root)
+
 
 # noinspection PyPep8Naming
 def classFactory(iface):  # pylint: disable=invalid-name

@@ -411,22 +411,22 @@
   <customwidget>
    <class>FeatureLayerComboBox</class>
    <extends>QComboBox</extends>
-   <header>demstyle_all.ui.feature_layer_combo_box</header>
+   <header>ui.feature_layer_combo_box</header>
   </customwidget>
   <customwidget>
    <class>DataRangeSlider</class>
    <extends>QWidget</extends>
-   <header>demstyle_all.ui.data_range_slider</header>
+   <header>ui.data_range_slider</header>
   </customwidget>
         <customwidget>
          <class>CurrentFeatureTableWidget</class>
          <extends>QTableWidget</extends>
-         <header>demstyle_all.ui.current_feature_table_widget</header>
+   <header>ui.current_feature_table_widget</header>
         </customwidget>
         <customwidget>
          <class>ElevationInputWidget</class>
          <extends>QWidget</extends>
-         <header>demstyle_all.ui.elevation_input_widget</header>
+   <header>ui.elevation_input_widget</header>
         </customwidget>
  </customwidgets>
  <resources/>
